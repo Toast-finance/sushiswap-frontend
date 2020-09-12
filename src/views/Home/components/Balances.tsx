@@ -148,7 +148,14 @@ const Balances: React.FC = () => {
                                 <YamIcon icon={"🏠"}/>
                                 <Spacer/>
                                 <div style={{flex: 1}}>
+                                  <StyledBalanceHeader>
                                     <Label text="Your HOUSE Balance"/>
+                                    <StyledBalanceLink
+                                      href="https://uniswap.info/token/0x19810559df63f19cfe88923313250550edadb743"
+                                      rel="noreferrer noopner"
+                                      target="_blank"
+                                    >Get HOUSE</StyledBalanceLink>
+                                  </StyledBalanceHeader>
                                     {!!account &&
                                     <Value
                                         value={getBalanceNumber(houseBalance) * Math.pow(10, 18)}
@@ -181,7 +188,14 @@ const Balances: React.FC = () => {
                     <YamIcon icon={"🥑"}/>
                     <Spacer/>
                     <div style={{flex: 1}}>
-                      <Label text="Your AVO Balance"/>
+                      <StyledBalanceHeader>
+                        <Label text="Your AVO Balance"/>
+                        <StyledBalanceLink
+                          href="https://uniswap.info/token/0x774adc647a8d27947c8d7c098cdb4cdf30b126de"
+                          rel="noreferrer noopner"
+                          target="_blank"
+                        >Get AVO</StyledBalanceLink>
+                      </StyledBalanceHeader>
                       {!!account &&
                       <Value
                           value={getBalanceNumber(avoBalance)}
@@ -213,7 +227,14 @@ const Balances: React.FC = () => {
                     <YamIcon icon={"🥚"}/>
                     <Spacer/>
                     <div style={{flex: 1}}>
-                      <Label text="Your EGGS Balance"/>
+                      <StyledBalanceHeader>
+                        <Label text="Your EGGS Balance"/>
+                        <StyledBalanceLink
+                          href="https://uniswap.info/token/0x98be5a6b401b911151853d94a6052526dcb46fe3"
+                          rel="noreferrer noopner"
+                          target="_blank"
+                        >Get EGGS</StyledBalanceLink>
+                      </StyledBalanceHeader>
                       {!!account &&
                       <Value
                           value={getBalanceNumber(eggsBalance)}
@@ -245,7 +266,14 @@ const Balances: React.FC = () => {
                                 <YamIcon/>
                                 <Spacer/>
                                 <div style={{flex: 1}}>
-                                    <Label text="Your TOAST Balance"/>
+                                    <StyledBalanceHeader>
+                                      <Label text="Your TOAST Balance"/>
+                                      <StyledBalanceLink
+                                        href="https://uniswap.info/token/0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47"
+                                        rel="noreferrer noopner"
+                                        target="_blank"
+                                      >Get TOAST</StyledBalanceLink>
+                                    </StyledBalanceHeader>
                                     {!!account &&
                                     <Value
                                         value={getBalanceNumber(sushiBalance)}
@@ -319,6 +347,19 @@ const StyledBalance = styled.div`
   align-items: center;
   display: flex;
   flex: 1;
+`
+
+const StyledBalanceHeader = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+`
+
+const StyledBalanceLink = styled.a`
+  font-weight: 600;
+  font-size: 0.825rem;
+  color: ${(props) => props.theme.color.grey[400]};
 `
 
 const StyledValue = styled.div`

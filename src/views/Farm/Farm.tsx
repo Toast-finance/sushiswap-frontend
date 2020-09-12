@@ -61,6 +61,10 @@ const Farm: React.FC = () => {
         subtitle={`Deposit ${lpTokenName}  Tokens and earn ${earnTokenName}`}
         title={name}
       />
+      <StyledInfo>
+        🏆<b>Pro Tip</b>: To get ${lpTokenName}, {lpTokenName.endsWith(" BPT") ? <a href={"https://pools.balancer.exchange/#/pool/" + lpTokenAddress + "/"} target={"_blank"}>add liquidity to the Balancer pool</a> : <a href={"https://uniswap.info/pair/" + lpTokenAddress} target={"_blank"}>add liquidity to the Uniswap pair</a>}.<br />Please do your own research about how liquidity pools operate before you do this.<br />If the liquidity pool contains HOUSE, please be aware that HOUSE has no decimals and that your balance may be rounded when you withdraw.
+      </StyledInfo>
+      <br />
       <StyledFarm>
         <StyledCardsWrapper>
           <StyledCardWrapper>
@@ -78,7 +82,7 @@ const Farm: React.FC = () => {
         <Spacer size="lg" />
         <StyledInfo>
           ⭐️ Every time you stake and unstake LP tokens, the contract will
-          automagically harvest SUSHI rewards for you!
+          automagically harvest TOAST rewards for you!
         </StyledInfo>
         <Spacer size="lg" />
       </StyledFarm>

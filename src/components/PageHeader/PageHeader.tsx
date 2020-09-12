@@ -15,6 +15,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ icon, subtitle, title }) => {
       <StyledPageHeader>
         <StyledIcon>{icon}</StyledIcon>
         <StyledTitle>{title}</StyledTitle>
+        <br />
         <StyledSubtitle>{subtitle}</StyledSubtitle>
       </StyledPageHeader>
     </Container>
@@ -36,7 +37,6 @@ const StyledIcon = styled.div`
   height: 120px;
   line-height: 120px;
   text-align: center;
-  width: 120px;
 `
 
 const StyledTitle = styled.h1`

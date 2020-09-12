@@ -44,6 +44,7 @@ const useAllStakedValue = () => {
           tokenContract: Contract
         }) =>
           getTotalLPWethValue(
+            sushi,
             masterChefContract,
             wethContact,
             lpContract,

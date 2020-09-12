@@ -1,130 +1,293 @@
-import BigNumber from 'bignumber.js'
-import React, { useEffect, useState } from 'react'
-import CountUp from 'react-countup'
+import React, {useEffect, useState} from 'react'
 import styled from 'styled-components'
-import { useWallet } from 'use-wallet'
+import numeral from 'numeral'
+import {useWallet} from 'use-wallet'
+
 import Card from '../../../components/Card'
 import CardContent from '../../../components/CardContent'
 import Label from '../../../components/Label'
 import Spacer from '../../../components/Spacer'
 import Value from '../../../components/Value'
-import SushiIcon from '../../../components/SushiIcon'
-import useAllEarnings from '../../../hooks/useAllEarnings'
-import useAllStakedValue from '../../../hooks/useAllStakedValue'
+import YamIcon from '../../../components/SushiIcon'
+
 import useFarms from '../../../hooks/useFarms'
 import useTokenBalance from '../../../hooks/useTokenBalance'
-import useSushi from '../../../hooks/useSushi'
-import { getSushiAddress, getSushiSupply } from '../../../sushi/utils'
-import { getBalanceNumber } from '../../../utils/formatBalance'
+import useUnharvested from '../../../hooks/useUnharvested'
+import useYam from '../../../hooks/useSushi'
+import useBlock from '../../../hooks/useBlock'
+import useAllEarnings from '../../../hooks/useAllEarnings'
+import useAllStakedValue from '../../../hooks/useAllStakedValue'
+
+import {bnToDec} from '../../../utils'
+import {getBalanceNumber} from '../../../utils/formatBalance'
+import {getSushiSupply, getSushiContract} from '../../../sushi/utils'
+import {getSushiAddress} from '../../../sushi/utils'
+import BigNumber from 'bignumber.js'
+import CountUp from 'react-countup'
+import AccountButton from "../../../components/TopBar/components/AccountButton";
 
 const PendingRewards: React.FC = () => {
-  const [start, setStart] = useState(0)
-  const [end, setEnd] = useState(0)
-  const [scale, setScale] = useState(1)
+    const [start, setStart] = useState(0)
+    const [end, setEnd] = useState(0)
+    const [scale, setScale] = useState(1)
 
-  const allEarnings = useAllEarnings()
-  let sumEarning = 0
-  for (let earning of allEarnings) {
-    sumEarning += new BigNumber(earning)
-      .div(new BigNumber(10).pow(18))
-      .toNumber()
-  }
+    const allEarnings = useAllEarnings()
+    let sumEarning = 0
+    for (let earning of allEarnings) {
+        sumEarning += new BigNumber(earning)
+            .div(new BigNumber(10).pow(18))
+            .toNumber()
+    }
 
-  const [farms] = useFarms()
-  const allStakedValue = useAllStakedValue()
+    useEffect(() => {
+        setStart(end)
+        setEnd(sumEarning)
+    }, [sumEarning])
 
-  if (allStakedValue && allStakedValue.length) {
-    const sumWeth = farms.reduce(
-      (c, { id }, i) => c + (allStakedValue[i].totalWethValue.toNumber() || 0),
-      0,
-    )
-  }
-
-  useEffect(() => {
-    setStart(end)
-    setEnd(sumEarning)
-  }, [sumEarning])
-
-  return (
-    <span
-      style={{
-        transform: `scale(${scale})`,
-        transformOrigin: 'right bottom',
-        transition: 'transform 0.5s',
-        display: 'inline-block',
-      }}
-    >
+    return (
+        <span
+            style={{
+                transform: `scale(${scale})`,
+                transformOrigin: 'right bottom',
+                transition: 'transform 0.5s',
+                display: 'inline-block',
+            }}
+        >
       <CountUp
-        start={start}
-        end={end}
-        decimals={end < 0 ? 4 : end > 1e5 ? 0 : 3}
-        duration={1}
-        onStart={() => {
-          setScale(1.25)
-          setTimeout(() => setScale(1), 600)
-        }}
-        separator=","
+          start={start}
+          end={end}
+          decimals={end < 0 ? 4 : end > 1e5 ? 0 : 3}
+          duration={1}
+          onStart={() => {
+              setScale(1.25)
+              setTimeout(() => setScale(1), 600)
+          }}
+          separator=","
       />
     </span>
-  )
+    )
 }
 
 const Balances: React.FC = () => {
-  const [totalSupply, setTotalSupply] = useState<BigNumber>()
-  const sushi = useSushi()
-  const sushiBalance = useTokenBalance(getSushiAddress(sushi))
-  const { account, ethereum }: { account: any; ethereum: any } = useWallet()
+    const [totalSupply, setTotalSupply] = useState<BigNumber>()
+    const [TVL, setTVL] = useState<Number>()
 
-  useEffect(() => {
-    async function fetchTotalSupply() {
-      const supply = await getSushiSupply(sushi)
-      setTotalSupply(supply)
-    }
-    if (sushi) {
-      fetchTotalSupply()
-    }
-  }, [sushi, setTotalSupply])
+    const yam = useYam()
+    const sushiBalance = useTokenBalance(getSushiAddress(yam))
+  const houseBalance = useTokenBalance("0x19810559df63f19cfe88923313250550edadb743")
+  const avoBalance = useTokenBalance("0x774adc647a8d27947c8d7c098cdb4cdf30b126de")
+  const eggsBalance = useTokenBalance("0x98be5a6b401b911151853d94a6052526dcb46fe3")
+  const {account, ethereum}: { account: any; ethereum: any } = useWallet()
 
-  return (
-    <StyledWrapper>
-      <Card>
-        <CardContent>
-          <StyledBalances>
-            <StyledBalance>
-              <SushiIcon />
-              <Spacer />
-              <div style={{ flex: 1 }}>
-                <Label text="Your SUSHI Balance" />
-                <Value
-                  value={!!account ? getBalanceNumber(sushiBalance) : 'Locked'}
-                />
-              </div>
-            </StyledBalance>
-          </StyledBalances>
-        </CardContent>
-        <Footnote>
-          Pending harvest
-          <FootnoteValue>
-            <PendingRewards /> SUSHI
-          </FootnoteValue>
-        </Footnote>
-      </Card>
-      <Spacer />
+    const block = useBlock()
+    const startBlock = 10750000
+    const farmStarted = ethereum && block >= startBlock
 
-      <Card>
-        <CardContent>
-          <Label text="Total SUSHI Supply" />
-          <Value
-            value={totalSupply ? getBalanceNumber(totalSupply) : 'Locked'}
-          />
-        </CardContent>
-        <Footnote>
-          New rewards per block
-          <FootnoteValue>1,000 SUSHI</FootnoteValue>
-        </Footnote>
-      </Card>
-    </StyledWrapper>
-  )
+    const [farms] = useFarms()
+    const allStakedValue = useAllStakedValue()
+
+    useEffect(() => {
+        async function fetchTotalSupply() {
+            const supply = await getSushiSupply(yam)
+            setTotalSupply(supply)
+        }
+
+        function fetchTVL() {
+            if (allStakedValue && allStakedValue.length) {
+                const sumWeth = farms.reduce(
+                    (c, {id}, i) => c + (allStakedValue[i].totalWethValue.toNumber() || 0),
+                    0,
+                )
+
+                console.log('Total ETH value LPs represent =', sumWeth, 'ETH')
+                console.log(
+                    farms.map(({tokenSymbol}, i) => {
+                        console.log(
+                            tokenSymbol,
+                            allStakedValue[i].tokenAmount.toNumber(),
+                            allStakedValue[i].totalWethValue.toNumber(),
+                            'ETH',
+                        )
+                    }),
+                )
+
+                setTVL(sumWeth);
+            }
+        }
+
+        if (yam) {
+            fetchTotalSupply()
+        }
+        fetchTVL()
+    }, [yam, setTotalSupply, allStakedValue, farms, setTVL])
+
+    return (
+        <div>
+            <StyledWrapper>
+                <Card>
+                    <CardContent>
+                        <Label text="Total Value Locked"/>
+                        {!!account && TVL > 0 &&
+                        <StyledValue>{TVL.toFixed(3)} ETH</StyledValue>
+                        }
+                        {!!account && TVL == null &&
+                        <StyledValue>Loading ...</StyledValue>
+                        }
+                        {!!!account &&
+                        <AccountButton />
+                        }
+                    </CardContent>
+                </Card>
+            </StyledWrapper>
+            <br />
+            <StyledWrapper>
+                <Card>
+                    <CardContent>
+                        <StyledBalances>
+                            <StyledBalance>
+                                <YamIcon icon={"🏠"}/>
+                                <Spacer/>
+                                <div style={{flex: 1}}>
+                                    <Label text="Your HOUSE Balance"/>
+                                    {!!account &&
+                                    <Value
+                                        value={getBalanceNumber(houseBalance) * Math.pow(10, 18)}
+                                        decimals={0}
+                                    />
+                                    }
+                                    {!!!account &&
+                                    <AccountButton />
+                                    }
+                                </div>
+                            </StyledBalance>
+                        </StyledBalances>
+                    </CardContent>
+                </Card>
+                <Spacer/>
+
+                <Card>
+                    <CardContent>
+                        <Label text="Total HOUSE Supply (fixed)"/>
+                        <StyledValue>20,000</StyledValue>
+                    </CardContent>
+                </Card>
+            </StyledWrapper>
+          <br />
+          <StyledWrapper>
+            <Card>
+              <CardContent>
+                <StyledBalances>
+                  <StyledBalance>
+                    <YamIcon icon={"🥑"}/>
+                    <Spacer/>
+                    <div style={{flex: 1}}>
+                      <Label text="Your AVO Balance"/>
+                      {!!account &&
+                      <Value
+                          value={getBalanceNumber(avoBalance)}
+                      />
+                      }
+                      {!!!account &&
+                      <AccountButton />
+                      }
+                    </div>
+                  </StyledBalance>
+                </StyledBalances>
+              </CardContent>
+            </Card>
+            <Spacer/>
+
+            <Card>
+              <CardContent>
+                <Label text="Total AVO Supply (fixed)"/>
+                <StyledValue>100,000</StyledValue>
+              </CardContent>
+            </Card>
+          </StyledWrapper>
+          <br />
+          <StyledWrapper>
+            <Card>
+              <CardContent>
+                <StyledBalances>
+                  <StyledBalance>
+                    <YamIcon icon={"🥚"}/>
+                    <Spacer/>
+                    <div style={{flex: 1}}>
+                      <Label text="Your EGGS Balance"/>
+                      {!!account &&
+                      <Value
+                          value={getBalanceNumber(eggsBalance)}
+                      />
+                      }
+                      {!!!account &&
+                      <AccountButton />
+                      }
+                    </div>
+                  </StyledBalance>
+                </StyledBalances>
+              </CardContent>
+            </Card>
+            <Spacer/>
+
+            <Card>
+              <CardContent>
+                <Label text="Total EGGS Supply (fixed)"/>
+                <StyledValue>100,000</StyledValue>
+              </CardContent>
+            </Card>
+          </StyledWrapper>
+            <br />
+            <StyledWrapper>
+                <Card>
+                    <CardContent>
+                        <StyledBalances>
+                            <StyledBalance>
+                                <YamIcon/>
+                                <Spacer/>
+                                <div style={{flex: 1}}>
+                                    <Label text="Your TOAST Balance"/>
+                                    {!!account &&
+                                    <Value
+                                        value={getBalanceNumber(sushiBalance)}
+                                    />
+                                    }
+                                    {!!!account &&
+                                    <AccountButton />
+                                    }
+                                </div>
+                            </StyledBalance>
+                        </StyledBalances>
+                    </CardContent>
+                    <Footnote>
+                        Pending harvest
+                        <FootnoteValue>
+                            <PendingRewards/> TOAST
+                        </FootnoteValue>
+                    </Footnote>
+                </Card>
+                <Spacer/>
+
+                <Card>
+                    <CardContent>
+                        <Label text="Total TOAST Supply"/>
+                        {totalSupply &&
+                        <Value
+                            value={getBalanceNumber(totalSupply)}
+                        />
+                        }
+                        {!totalSupply &&
+                        <AccountButton />
+                        }
+                    </CardContent>
+                    <Footnote>
+                        New rewards per block
+                        <FootnoteValue>1,000 TOAST</FootnoteValue>
+                    </Footnote>
+                </Card>
+            </StyledWrapper>
+
+        </div>
+    )
 }
 
 const Footnote = styled.div`
@@ -156,6 +319,13 @@ const StyledBalance = styled.div`
   align-items: center;
   display: flex;
   flex: 1;
+`
+
+const StyledValue = styled.div`
+  font-family: 'Roboto Mono', monospace;
+  color: ${(props) => props.theme.color.grey[600]};
+  font-size: 36px;
+  font-weight: 700;
 `
 
 export default Balances

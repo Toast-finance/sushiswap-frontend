@@ -20,7 +20,7 @@ const StyledFooterInner = styled.div`
   align-items: center;
   display: flex;
   justify-content: center;
-  height: ${props => props.theme.topBarSize}px;
+  min-height: ${props => props.theme.topBarSize}px;
   max-width: ${props => props.theme.siteWidth}px;
   width: 100%;
 `

@@ -1,5 +1,7 @@
 import BigNumber from 'bignumber.js'
 import { ethers } from 'ethers'
+import {supportedPools} from "./lib/constants";
+import {Contracts} from "./lib/contracts";
 
 BigNumber.config({
   EXPONENTIAL_AT: 1000,
@@ -53,7 +55,7 @@ export const getFarms = (sushi) => {
           tokenAddress,
           tokenSymbol,
           tokenContract,
-          earnToken: 'sushi',
+          earnToken: 'toast',
           earnTokenAddress: sushi.contracts.sushi.options.address,
           icon,
         }),
@@ -74,6 +76,7 @@ export const getEarned = async (masterChefContract, pid, account) => {
 }
 
 export const getTotalLPWethValue = async (
+  sushi,
   masterChefContract,
   wethContract,
   lpContract,
@@ -92,13 +95,51 @@ export const getTotalLPWethValue = async (
   // Convert that into the portion of total lpContract = p1
   const totalSupply = await lpContract.methods.totalSupply().call()
   // Get total weth value for the lpContract = w1
-  const lpContractWeth = await wethContract.methods
+  let lpContractWeth = await wethContract.methods
     .balanceOf(lpContract.options.address)
     .call()
+
+  if (lpContractWeth == 0) {
+    const tokenBalance = await tokenContract.methods
+        .balanceOf(lpContract.options.address)
+        .call()
+    const balance2index = supportedPools.findIndex(pool => pool.tokenAddresses[1].toLowerCase() == tokenContract.options.address.toString().toLowerCase());
+    let lpContractOtherToken = await tokenContract.methods
+        .balanceOf(sushi.contracts.pools[balance2index].lpContract.options.address)
+        .call()
+    lpContractWeth = await wethContract.methods
+        .balanceOf(sushi.contracts.pools[balance2index].lpContract.options.address)
+        .call() * tokenBalance / lpContractOtherToken;
+
+    if (lpContractWeth == 0) {
+      const firstStepIndex = supportedPools.findIndex(pool => pool.tokenAddresses[2] && pool.tokenAddresses[2].toLowerCase() == tokenContract.options.address.toString().toLowerCase());
+      let firstStepTokenBalance = await tokenContract.methods
+          .balanceOf(sushi.contracts.pools[firstStepIndex].lpContract.options.address)
+          .call()
+
+      let secondStepTokenBalance = await sushi.contracts.pools[firstStepIndex].tokenContract.methods
+          .balanceOf(sushi.contracts.pools[firstStepIndex].lpContract.options.address)
+          .call()
+      const secondStepIndex = supportedPools.findIndex(pool => pool.tokenAddresses[1].toLowerCase() == sushi.contracts.pools[firstStepIndex].tokenContract.options.address.toString().toLowerCase());
+      let thirdStepTokenBalance = await sushi.contracts.pools[firstStepIndex].tokenContract.methods
+          .balanceOf(sushi.contracts.pools[secondStepIndex].lpContract.options.address)
+          .call()
+      lpContractWeth = await wethContract.methods
+          .balanceOf(sushi.contracts.pools[secondStepIndex].lpContract.options.address)
+          .call() * secondStepTokenBalance / thirdStepTokenBalance * tokenBalance / firstStepTokenBalance;
+    }
+
+  }
+
+  if (supportedPools[pid].tokenSymbol === "BPT") {
+    lpContractWeth *= 50/45 // Our balancer pool has 45% WETH
+  }
+
   // Return p1 * w1 * 2
   const portionLp = new BigNumber(balance).div(new BigNumber(totalSupply))
   const lpWethWorth = new BigNumber(lpContractWeth)
   const totalLpWethValue = portionLp.times(lpWethWorth).times(new BigNumber(2))
+
   // Calculate
   const tokenAmount = new BigNumber(tokenAmountWholeLP)
     .times(portionLp)
@@ -107,6 +148,10 @@ export const getTotalLPWethValue = async (
   const wethAmount = new BigNumber(lpContractWeth)
     .times(portionLp)
     .div(new BigNumber(10).pow(18))
+
+  console.log(pid)
+  console.log(wethAmount.toNumber())
+
   return {
     tokenAmount,
     wethAmount,

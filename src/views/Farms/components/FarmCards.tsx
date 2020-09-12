@@ -15,7 +15,7 @@ import useAllStakedValue, {
 } from '../../../hooks/useAllStakedValue'
 import useFarms from '../../../hooks/useFarms'
 import useSushi from '../../../hooks/useSushi'
-import { getEarned, getMasterChefContract } from '../../../sushi/utils'
+import {getEarned, getMasterChefContract, getPoolWeight} from '../../../sushi/utils'
 import { bnToDec } from '../../../utils'
 
 interface FarmWithStakedValue extends Farm, StakedValue {
@@ -28,60 +28,60 @@ const FarmCards: React.FC = () => {
   const stakedValue = useAllStakedValue()
 
   const sushiIndex = farms.findIndex(
-    ({ tokenSymbol }) => tokenSymbol === 'SUSHI',
+      ({ tokenSymbol }) => tokenSymbol === 'TOAST',
   )
 
   const sushiPrice =
-    sushiIndex >= 0 && stakedValue[sushiIndex]
-      ? stakedValue[sushiIndex].tokenPriceInWeth
-      : new BigNumber(0)
+      sushiIndex >= 0 && stakedValue[sushiIndex]
+          ? stakedValue[sushiIndex].tokenPriceInWeth
+          : new BigNumber(0)
 
   const BLOCKS_PER_YEAR = new BigNumber(2336000)
   const SUSHI_PER_BLOCK = new BigNumber(1000)
 
   const rows = farms.reduce<FarmWithStakedValue[][]>(
-    (farmRows, farm, i) => {
-      const farmWithStakedValue = {
-        ...farm,
-        ...stakedValue[i],
-        apy: stakedValue[i]
-          ? sushiPrice
-              .times(SUSHI_PER_BLOCK)
-              .times(BLOCKS_PER_YEAR)
-              .times(stakedValue[i].poolWeight)
-              .div(stakedValue[i].totalWethValue)
-          : null,
-      }
-      const newFarmRows = [...farmRows]
-      if (newFarmRows[newFarmRows.length - 1].length === 3) {
-        newFarmRows.push([farmWithStakedValue])
-      } else {
-        newFarmRows[newFarmRows.length - 1].push(farmWithStakedValue)
-      }
-      return newFarmRows
-    },
-    [[]],
+      (farmRows, farm, i) => {
+        const farmWithStakedValue = {
+          ...farm,
+          ...stakedValue[i],
+          apy: stakedValue[i]
+              ? sushiPrice
+                  .times(SUSHI_PER_BLOCK)
+                  .times(BLOCKS_PER_YEAR)
+                  .times(stakedValue[i].poolWeight)
+                  .div(stakedValue[i].totalWethValue)
+              : null,
+        }
+        const newFarmRows = [...farmRows]
+        if (newFarmRows[newFarmRows.length - 1].length === 3) {
+          newFarmRows.push([farmWithStakedValue])
+        } else {
+          newFarmRows[newFarmRows.length - 1].push(farmWithStakedValue)
+        }
+        return newFarmRows
+      },
+      [[]],
   )
 
   return (
-    <StyledCards>
-      {!!rows[0].length ? (
-        rows.map((farmRow, i) => (
-          <StyledRow key={i}>
-            {farmRow.map((farm, j) => (
-              <React.Fragment key={j}>
-                <FarmCard farm={farm} />
-                {(j === 0 || j === 1) && <StyledSpacer />}
-              </React.Fragment>
-            ))}
-          </StyledRow>
-        ))
-      ) : (
-        <StyledLoadingWrapper>
-          <Loader text="Cooking the rice ..." />
-        </StyledLoadingWrapper>
-      )}
-    </StyledCards>
+      <StyledCards>
+        {!!rows[0].length ? (
+            rows.map((farmRow, i) => (
+                <StyledRow key={i}>
+                  {farmRow.map((farm, j) => (
+                      <React.Fragment key={j}>
+                        <FarmCard farm={farm} />
+                        {(j === 0 || j === 1) && <StyledSpacer />}
+                      </React.Fragment>
+                  ))}
+                </StyledRow>
+            ))
+        ) : (
+            <StyledLoadingWrapper>
+              <Loader text="Toasting ..." />
+            </StyledLoadingWrapper>
+        )}
+      </StyledCards>
   )
 }
 
@@ -92,6 +92,7 @@ interface FarmCardProps {
 const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
   const [startTime, setStartTime] = useState(0)
   const [harvestable, setHarvestable] = useState(0)
+  const [poolWeight, setPoolWeight] = useState(0)
 
   const { account } = useWallet()
   const { lpTokenAddress } = farm
@@ -103,7 +104,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
     const paddedMinutes = minutes < 10 ? `0${minutes}` : minutes
     const paddedHours = hours < 10 ? `0${hours}` : hours
     return (
-      <span style={{ width: '100%' }}>
+        <span style={{ width: '100%' }}>
         {paddedHours}:{paddedMinutes}:{paddedSeconds}
       </span>
     )
@@ -113,56 +114,63 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
     async function fetchEarned() {
       if (sushi) return
       const earned = await getEarned(
-        getMasterChefContract(sushi),
-        lpTokenAddress,
-        account,
+          getMasterChefContract(sushi),
+          lpTokenAddress,
+          account,
       )
       setHarvestable(bnToDec(earned))
+    }
+    async function fetchWeight() {
+      //if (sushi) return
+      const weight = await getPoolWeight(getMasterChefContract(sushi), farm.pid)
+      setPoolWeight(weight.toNumber() * 25)
     }
     if (sushi && account) {
       fetchEarned()
     }
-  }, [sushi, lpTokenAddress, account, setHarvestable])
+    fetchWeight()
+  }, [sushi, lpTokenAddress, account, setHarvestable, setPoolWeight])
 
   const poolActive = true // startTime * 1000 - Date.now() <= 0
 
   return (
-    <StyledCardWrapper>
-      {farm.tokenSymbol === 'SUSHI' && <StyledCardAccent />}
-      <Card>
-        <CardContent>
-          <StyledContent>
-            <CardIcon>{farm.icon}</CardIcon>
-            <StyledTitle>{farm.name}</StyledTitle>
-            <StyledDetails>
-              <StyledDetail>Deposit {farm.lpToken.toUpperCase()}</StyledDetail>
-              <StyledDetail>Earn {farm.earnToken.toUpperCase()}</StyledDetail>
-            </StyledDetails>
-            <Spacer />
-            <Button
-              disabled={!poolActive}
-              text={poolActive ? 'Select' : undefined}
-              to={`/farms/${farm.id}`}
-            >
-              {!poolActive && (
-                <Countdown
-                  date={new Date(startTime * 1000)}
-                  renderer={renderer}
-                />
-              )}
-            </Button>
-            <StyledInsight>
-              <span>APY</span>
-              <span>
+      <StyledCardWrapper>
+        {farm.tokenSymbol === 'TOAST' && <StyledCardAccent />}
+        <Card>
+          <CardContent>
+            <StyledContent>
+              <CardIcon>{farm.icon}</CardIcon>
+              <StyledTitle>{farm.name}</StyledTitle>
+              <StyledDetails>
+                <StyledDetail>Deposit <a href={farm.lpToken.endsWith(" BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : "https://uniswap.info/pair/" + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
+                <StyledDetail>Earn {farm.earnToken.toUpperCase()} {poolWeight > 1 ? <span>(<strong>{poolWeight}x</strong> Rewards)</span> : ""}</StyledDetail>
+              </StyledDetails>
+              <Spacer />
+              <Button
+                  disabled={!poolActive}
+                  text={poolActive ? 'Select' : undefined}
+                  to={`/farms/${farm.id}`}
+              >
+                {!poolActive && (
+                    <Countdown
+                        date={new Date(startTime * 1000)}
+                        renderer={renderer}
+                    />
+                )}
+              </Button>
+
+                  <StyledInsight>
+                    <span>APY</span>
+                    <span>
                 {farm.apy
-                  ? `${farm.apy
-                      .times(new BigNumber(100))
-                      .toNumber()
-                      .toLocaleString('en-US')
-                      .slice(0, -1)}%`
-                  : 'Loading ...'}
+                    ? `${farm.apy
+                        .times(new BigNumber(100))
+                        .toNumber()
+                        .toLocaleString('en-US')
+                        .slice(0, -1) || "???"}%`
+                    : 'Loading ...'}
               </span>
-              {/* <span>
+                    {/* <span>
                 {farm.tokenAmount
                   ? (farm.tokenAmount.toNumber() || 0).toLocaleString('en-US')
                   : '-'}{' '}
@@ -174,11 +182,11 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
                   : '-'}{' '}
                 ETH
               </span> */}
-            </StyledInsight>
-          </StyledContent>
-        </CardContent>
-      </Card>
-    </StyledCardWrapper>
+                  </StyledInsight>
+            </StyledContent>
+          </CardContent>
+        </Card>
+      </StyledCardWrapper>
   )
 }
 

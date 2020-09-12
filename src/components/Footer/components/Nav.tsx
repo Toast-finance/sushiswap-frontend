@@ -1,37 +1,63 @@
 import React from 'react'
 import styled from 'styled-components'
+import Page from "../../Page";
 
 const Nav: React.FC = () => {
-  return (
-    <StyledNav>
-      <StyledLink
-        target="_blank"
-        href="https://etherscan.io/address/0xc2edad668740f1aa35e4d8f227fb8e17dca888cd#code"
-      >
-        MasterChef Contract
-      </StyledLink>
-      <StyledLink
-        target="_blank"
-        href="https://uniswap.info/pair/0xce84867c3c02b05dc570d0135103d3fb9cc19433"
-      >
-        Uniswap SUSHI-ETH
-      </StyledLink>
-      <StyledLink target="_blank" href="https://discord.gg/hJ2p555">
-        Discord
-      </StyledLink>
-      <StyledLink target="_blank" href="https://github.com/sushiswap">
-        Github
-      </StyledLink>
-      <StyledLink target="_blank" href="https://twitter.com/sushiswap">
-        Twitter
-      </StyledLink>
-    </StyledNav>
-  )
+    return (
+        <div style={{paddingBottom: "20px"}}>
+            <br/>
+            <StyledInfo style={{fontSize: 12}}>
+                This project is in beta and all features are offered as-is without audit or guarantee. Please do your
+                own research about cryptocurrency, Ethereum tokens, staking, Uniswap pools, impermanent loss, defi, and
+                yield farming. None of the content published on this website constitutes a recommendation that you
+                participate in our ecosystem. If you do decide to participate in our experimental platform, please
+                ensure that you understand all risks involved and exactly what it is that you are doing.
+            </StyledInfo>
+            <br />
+            <StyledNav>
+                <StyledLink
+                    target="_blank"
+                    href="https://t.me/toastfinance"
+                >
+                    Telegram
+                </StyledLink>
+                <StyledLink
+                    target="_blank"
+                    href="https://github.com/Toast-finance/"
+                >
+                    GitHub
+                </StyledLink>
+                <StyledLink target="_blank" href="https://twitter.com/toastfinance">
+                    Twitter
+                </StyledLink>
+                <StyledLink target="_blank"
+                            href="https://etherscan.io/token/0x19810559df63f19cfe88923313250550edadb743">
+                    HOUSE Contract
+                </StyledLink>
+                <StyledLink target="_blank"
+                            href="https://etherscan.io/token/0x774adc647a8d27947c8d7c098cdb4cdf30b126de">
+                    AVO Contract
+                </StyledLink>
+                <StyledLink target="_blank"
+                            href="https://etherscan.io/token/0x98be5a6b401b911151853d94a6052526dcb46fe3">
+                    EGGS Contract
+                </StyledLink>
+                <StyledLink target="_blank"
+                            href="https://etherscan.io/token/0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47">
+                    TOAST Contract
+                </StyledLink>
+                <StyledLink target="_blank" href="https://gov.toast.finance/#/toast">
+                    Governance
+                </StyledLink>
+            </StyledNav>
+        </div>
+    )
 }
 
 const StyledNav = styled.nav`
   align-items: center;
   display: flex;
+  justify-content: center;
 `
 
 const StyledLink = styled.a`
@@ -41,6 +67,19 @@ const StyledLink = styled.a`
   text-decoration: none;
   &:hover {
     color: ${(props) => props.theme.color.grey[500]};
+  }
+`
+
+const StyledInfo = styled.h3`
+  color: ${(props) => props.theme.color.grey[500]};
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+
+  > b {
+    color: ${(props) => props.theme.color.grey[600]};
   }
 `
 

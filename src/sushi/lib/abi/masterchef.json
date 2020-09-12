@@ -207,9 +207,9 @@
   },
   {
     "inputs": [],
-    "name": "sushi",
+    "name": "toast",
     "outputs": [
-      { "internalType": "contract SushiToken", "name": "", "type": "address" }
+      { "internalType": "contract ToastToken", "name": "", "type": "address" }
     ],
     "stateMutability": "view",
     "type": "function"

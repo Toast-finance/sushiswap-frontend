@@ -134,7 +134,9 @@ const Balances: React.FC = () => {
                         <StyledValue>Loading ...</StyledValue>
                         }
                         {!!!account &&
+                        <div style={{marginTop: '0.65rem'}}>
                         <AccountButton />
+                        </div>
                         }
                     </CardContent>
                 </Card>
@@ -163,7 +165,9 @@ const Balances: React.FC = () => {
                                     />
                                     }
                                     {!!!account &&
+                                    <div style={{marginTop: '0.65rem'}}>
                                     <AccountButton />
+                                    </div>
                                     }
                                 </div>
                             </StyledBalance>
@@ -202,7 +206,9 @@ const Balances: React.FC = () => {
                       />
                       }
                       {!!!account &&
+                      <div style={{marginTop: '0.65rem'}}>
                       <AccountButton />
+                      </div>
                       }
                     </div>
                   </StyledBalance>
@@ -241,7 +247,9 @@ const Balances: React.FC = () => {
                       />
                       }
                       {!!!account &&
+                      <div style={{marginTop: '0.65rem'}}>
                       <AccountButton />
+                      </div>
                       }
                     </div>
                   </StyledBalance>
@@ -280,7 +288,9 @@ const Balances: React.FC = () => {
                                     />
                                     }
                                     {!!!account &&
+                                    <div style={{marginTop: '0.65rem'}}>
                                     <AccountButton />
+                                    </div>
                                     }
                                 </div>
                             </StyledBalance>

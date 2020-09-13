@@ -17,6 +17,8 @@ import useFarms from '../../../hooks/useFarms'
 import useSushi from '../../../hooks/useSushi'
 import {getEarned, getMasterChefContract, getPoolWeight} from '../../../sushi/utils'
 import { bnToDec } from '../../../utils'
+import {getBalanceNumber} from "../../../utils/formatBalance";
+import useEarnings from "../../../hooks/useEarnings";
 
 interface FarmWithStakedValue extends Farm, StakedValue {
   apy: BigNumber
@@ -97,6 +99,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
   const { account } = useWallet()
   const { lpTokenAddress } = farm
   const sushi = useSushi()
+  const earned = useEarnings(farm.pid)
 
   const renderer = (countdownProps: CountdownRenderProps) => {
     const { hours, minutes, seconds } = countdownProps
@@ -112,24 +115,15 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
 
   useEffect(() => {
     async function fetchEarned() {
-      if (sushi) return
-      const earned = await getEarned(
-          getMasterChefContract(sushi),
-          lpTokenAddress,
-          account,
-      )
-      setHarvestable(bnToDec(earned))
+      setHarvestable(getBalanceNumber(earned))
     }
     async function fetchWeight() {
-      //if (sushi) return
       const weight = await getPoolWeight(getMasterChefContract(sushi), farm.pid)
       setPoolWeight(weight.toNumber() * 25)
     }
-    if (sushi && account) {
-      fetchEarned()
-    }
+    fetchEarned()
     fetchWeight()
-  }, [sushi, lpTokenAddress, account, setHarvestable, setPoolWeight])
+  }, [sushi, lpTokenAddress, earned, setHarvestable, setPoolWeight])
 
   const poolActive = true // startTime * 1000 - Date.now() <= 0
 
@@ -145,7 +139,21 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
                 <StyledDetail>Deposit <a href={farm.lpToken.endsWith(" BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : "https://uniswap.info/pair/" + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
                 <StyledDetail>Earn {farm.earnToken.toUpperCase()} {poolWeight > 1 ? <span>(<strong>{poolWeight}x</strong> Rewards)</span> : ""}</StyledDetail>
               </StyledDetails>
+
+              {harvestable > 0 &&
+              <StyledDetailsHarvest>
+                {harvestable.toLocaleString('en-US')} ready to harvest
+              </StyledDetailsHarvest>
+              }
+
+              {harvestable <= 0 &&
+              <StyledDetailsHarvest>
+                &nbsp;
+              </StyledDetailsHarvest>
+              }
+
               <Spacer />
+
               <Button
                   disabled={!poolActive}
                   text={poolActive ? 'Select' : undefined}
@@ -283,6 +291,12 @@ const StyledSpacer = styled.div`
 const StyledDetails = styled.div`
   margin-top: ${(props) => props.theme.spacing[2]}px;
   text-align: center;
+`
+
+const StyledDetailsHarvest = styled.div`
+  margin-top: ${(props) => props.theme.spacing[2]}px;
+  text-align: center;
+  color: #d16c00;
 `
 
 const StyledDetail = styled.div`

@@ -28,7 +28,7 @@ const Value: React.FC<ValueProps> = ({ value, decimals }) => {
           start={start}
           end={end}
           decimals={
-            decimals !== undefined ? decimals : end < 0 ? 4 : end > 1e5 ? 0 : ((value < 0.001 && value > 0) ? 18 : 3)
+            decimals !== undefined ? decimals : end < 0 ? 3 : end > 1e5 ? 3 : ((value < 0.001 && value > 0) ? 18 : 3)
           }
           duration={1}
           separator=","
@@ -43,6 +43,7 @@ const StyledValue = styled.div`
   color: ${(props) => props.theme.color.grey[600]};
   font-size: 36px;
   font-weight: 700;
+  word-break: break-all;
 `
 
 export default Value

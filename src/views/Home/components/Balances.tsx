@@ -128,7 +128,7 @@ const Balances: React.FC = () => {
                     <CardContent>
                         <Label text="Total Value Locked"/>
                         {!!account && TVL > 0 &&
-                        <StyledValue>{TVL.toFixed(3)} ETH</StyledValue>
+                        <StyledValue>{TVL.toFixed(2)} ETH</StyledValue>
                         }
                         {!!account && TVL == null &&
                         <StyledValue>Loading ...</StyledValue>

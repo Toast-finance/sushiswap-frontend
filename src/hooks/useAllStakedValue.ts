@@ -50,6 +50,7 @@ const useAllStakedValue = () => {
             lpContract,
             tokenContract,
             pid,
+            farms,
           ),
       ),
     )

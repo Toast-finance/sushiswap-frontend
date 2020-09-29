@@ -15,7 +15,7 @@ import useAllStakedValue, {
 } from '../../../hooks/useAllStakedValue'
 import useFarms from '../../../hooks/useFarms'
 import useSushi from '../../../hooks/useSushi'
-import {getEarned, getMasterChefContract, getPoolWeight} from '../../../sushi/utils'
+import {getEarned, getMasterChefContract, getPoolSingleWeight, getPoolWeight} from '../../../sushi/utils'
 import { bnToDec } from '../../../utils'
 import {getBalanceNumber} from "../../../utils/formatBalance";
 import useEarnings from "../../../hooks/useEarnings";
@@ -25,7 +25,8 @@ interface FarmWithStakedValue extends Farm, StakedValue {
 }
 
 const FarmCards: React.FC = () => {
-  const [farms] = useFarms()
+  let [farms] = useFarms()
+
   const { account } = useWallet()
   const stakedValue = useAllStakedValue()
 
@@ -118,8 +119,8 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
       setHarvestable(getBalanceNumber(earned))
     }
     async function fetchWeight() {
-      const weight = await getPoolWeight(getMasterChefContract(sushi), farm.pid)
-      setPoolWeight(weight.toNumber() * 25)
+      const weight = await getPoolSingleWeight(getMasterChefContract(sushi), farm.pid)
+      setPoolWeight(weight.toNumber() / 1000)
     }
     fetchEarned()
     fetchWeight()

@@ -2,6 +2,8 @@ import BigNumber from 'bignumber.js'
 import { ethers } from 'ethers'
 import {supportedPools} from "./lib/constants";
 import {Contracts} from "./lib/contracts";
+import UNIV2PairAbi from "./lib/abi/uni_v2_lp.json";
+import ERC20Abi from "./lib/abi/erc20.json";
 
 BigNumber.config({
   EXPONENTIAL_AT: 1000,
@@ -33,19 +35,22 @@ export const getSushiContract = (sushi) => {
 }
 
 export const getFarms = (sushi) => {
-  return sushi
-    ? sushi.contracts.pools.map(
+  if (!sushi) {
+    return []
+  }
+  else {
+    return sushi.contracts.pools.map(
         ({
-          pid,
-          name,
-          symbol,
-          icon,
-          tokenAddress,
-          tokenSymbol,
-          tokenContract,
-          lpAddress,
-          lpContract,
-        }) => ({
+           pid,
+           name,
+           symbol,
+           icon,
+           tokenAddress,
+           tokenSymbol,
+           tokenContract,
+           lpAddress,
+           lpContract,
+         }) => ({
           pid,
           id: symbol,
           name,
@@ -59,8 +64,13 @@ export const getFarms = (sushi) => {
           earnTokenAddress: sushi.contracts.sushi.options.address,
           icon,
         }),
-      )
-    : []
+    )
+  }
+}
+
+export const getPoolSingleWeight = async (masterChefContract, pid) => {
+  const { allocPoint } = await masterChefContract.methods.poolInfo(pid).call()
+  return new BigNumber(allocPoint)
 }
 
 export const getPoolWeight = async (masterChefContract, pid) => {
@@ -82,6 +92,7 @@ export const getTotalLPWethValue = async (
   lpContract,
   tokenContract,
   pid,
+  pools,
 ) => {
   // Get balance of the token address
   const tokenAmountWholeLP = await tokenContract.methods
@@ -103,7 +114,7 @@ export const getTotalLPWethValue = async (
     const tokenBalance = await tokenContract.methods
         .balanceOf(lpContract.options.address)
         .call()
-    const balance2index = supportedPools.findIndex(pool => pool.tokenAddresses[1].toLowerCase() == tokenContract.options.address.toString().toLowerCase());
+    const balance2index = pools.findIndex(pool => pool.tokenAddresses[1].toLowerCase() == tokenContract.options.address.toString().toLowerCase());
     let lpContractOtherToken = await tokenContract.methods
         .balanceOf(sushi.contracts.pools[balance2index].lpContract.options.address)
         .call()
@@ -112,7 +123,7 @@ export const getTotalLPWethValue = async (
         .call() * tokenBalance / lpContractOtherToken;
 
     if (lpContractWeth == 0) {
-      const firstStepIndex = supportedPools.findIndex(pool => pool.tokenAddresses[2] && pool.tokenAddresses[2].toLowerCase() == tokenContract.options.address.toString().toLowerCase());
+      const firstStepIndex = pools.findIndex(pool => pool.tokenAddresses[2] && pool.tokenAddresses[2].toLowerCase() == tokenContract.options.address.toString().toLowerCase());
       let firstStepTokenBalance = await tokenContract.methods
           .balanceOf(sushi.contracts.pools[firstStepIndex].lpContract.options.address)
           .call()
@@ -120,7 +131,7 @@ export const getTotalLPWethValue = async (
       let secondStepTokenBalance = await sushi.contracts.pools[firstStepIndex].tokenContract.methods
           .balanceOf(sushi.contracts.pools[firstStepIndex].lpContract.options.address)
           .call()
-      const secondStepIndex = supportedPools.findIndex(pool => pool.tokenAddresses[1].toLowerCase() == sushi.contracts.pools[firstStepIndex].tokenContract.options.address.toString().toLowerCase());
+      const secondStepIndex = pools.findIndex(pool => pool.tokenAddresses[1].toLowerCase() == sushi.contracts.pools[firstStepIndex].tokenContract.options.address.toString().toLowerCase());
       let thirdStepTokenBalance = await sushi.contracts.pools[firstStepIndex].tokenContract.methods
           .balanceOf(sushi.contracts.pools[secondStepIndex].lpContract.options.address)
           .call()
@@ -131,8 +142,12 @@ export const getTotalLPWethValue = async (
 
   }
 
-  if (supportedPools[pid].tokenSymbol === "BPT") {
+  if (pools[pid].tokenSymbol === "BPT") {
     lpContractWeth *= 50/45 // Our balancer pool has 45% WETH
+  }
+
+  if (pid === 13) {
+    lpContractWeth *= 50/30 // Phoenix BPT balancer pool has 30% WETH
   }
 
   // Return p1 * w1 * 2

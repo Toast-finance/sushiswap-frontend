@@ -25,17 +25,35 @@ export class Contracts {
     this.masterChef = new this.web3.eth.Contract(MasterChefAbi)
     this.weth = new this.web3.eth.Contract(WETHAbi)
 
-    this.pools = supportedPools.map((pool) =>
-      Object.assign(pool, {
-        lpAddress: pool.lpAddresses[networkId],
-        tokenAddress: pool.tokenAddresses[networkId],
-        lpContract: new this.web3.eth.Contract(UNIV2PairAbi),
-        tokenContract: new this.web3.eth.Contract(ERC20Abi),
-      }),
+    this.pools = [];
+    this.poolsDone = false;
+
+    this.setProvider(provider, networkId)
+    this.setDefaultAccount(this.web3.eth.defaultAccount)
+
+    this.getPools(networkId, provider);
+  }
+
+  poolsDone() {
+    return this.poolsDone
+  }
+
+  async getPools(networkId, provider) {
+    this.pools = await supportedPools(this.masterChef);
+    this.pools.map((pool) =>
+        Object.assign(pool, {
+          lpAddress: pool.lpAddresses[networkId],
+          tokenAddress: pool.tokenAddresses[networkId],
+          lpContract: new this.web3.eth.Contract(UNIV2PairAbi),
+          tokenContract: new this.web3.eth.Contract(ERC20Abi),
+        }),
     )
 
     this.setProvider(provider, networkId)
     this.setDefaultAccount(this.web3.eth.defaultAccount)
+
+    this.poolsDone = true
+    console.log("All done again")
   }
 
   setProvider(provider, networkId) {

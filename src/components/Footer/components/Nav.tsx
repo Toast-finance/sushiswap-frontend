@@ -11,7 +11,9 @@ const Nav: React.FC = () => {
                 own research about cryptocurrency, Ethereum tokens, staking, Uniswap pools, impermanent loss, defi, and
                 yield farming. None of the content published on this website constitutes a recommendation that you
                 participate in our ecosystem. If you do decide to participate in our experimental platform, please
-                ensure that you understand all risks involved and exactly what it is that you are doing.
+                ensure that you understand all risks involved and know exactly what it is that you are doing.
+                Trading and investing in cryptocurrencies (also called digital or virtual currencies, crypto assets, altcoins and tokens) involves substantial risk of loss.
+                HOUSE, AVO, EGGS and TOAST are all experimental tokens with no inherent value. Any value is up to the community.
             </StyledInfo>
             <br />
             <StyledNav>

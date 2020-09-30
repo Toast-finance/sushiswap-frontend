@@ -44,12 +44,12 @@ export class Contracts {
     setProvider(this.masterChef, contractAddresses.masterChef[networkId])
     setProvider(this.weth, contractAddresses.weth[networkId])
 
-    this.pools.forEach(
+    /*this.pools.forEach(
       ({ lpContract, lpAddress, tokenContract, tokenAddress }) => {
         setProvider(lpContract, lpAddress)
         setProvider(tokenContract, tokenAddress)
       },
-    )
+    )*/
   }
 
   setDefaultAccount(account) {

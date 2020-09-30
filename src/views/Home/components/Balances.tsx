@@ -20,18 +20,42 @@ import useAllStakedValue from '../../../hooks/useAllStakedValue'
 
 import {bnToDec} from '../../../utils'
 import {getBalanceNumber} from '../../../utils/formatBalance'
-import {getSushiSupply, getSushiContract} from '../../../sushi/utils'
+import {getSushiSupply, getSushiContract, getMasterChefContract} from '../../../sushi/utils'
 import {getSushiAddress} from '../../../sushi/utils'
 import BigNumber from 'bignumber.js'
 import CountUp from 'react-countup'
 import AccountButton from "../../../components/TopBar/components/AccountButton";
+import useSushi from "../../../hooks/useSushi";
+import {supportedPools} from "../../../sushi/lib/constants";
 
 const PendingRewards: React.FC = () => {
     const [start, setStart] = useState(0)
     const [end, setEnd] = useState(0)
     const [scale, setScale] = useState(1)
 
-    const allEarnings = useAllEarnings()
+    const [farms, setFarms] = useState(localStorage.getItem("pools") ? JSON.parse(localStorage.getItem("pools")) : [])
+    const {ethereum}: { ethereum: any } = useWallet()
+    const sushi = useSushi()
+
+    const chainId = 0;
+    if (ethereum) {
+        // @ts-ignore
+        window.eth = ethereum
+        const chainId = Number(ethereum.chainId)
+    }
+
+    useEffect(() => {
+        async function fetchFarms() {
+            //const [farms] = useFarms()
+            let pools = await supportedPools(sushi, getMasterChefContract(sushi), chainId, false, ethereum);
+            setFarms(pools)
+        }
+        if (ethereum) {
+            fetchFarms()
+        }
+    }, [sushi, setFarms, ethereum])
+
+    const allEarnings = useAllEarnings(farms)
     let sumEarning = 0
     for (let earning of allEarnings) {
         sumEarning += new BigNumber(earning)
@@ -83,8 +107,30 @@ const Balances: React.FC = () => {
     const startBlock = 10750000
     const farmStarted = ethereum && block >= startBlock
 
-    const [farms] = useFarms()
-    const allStakedValue = useAllStakedValue()
+    //const [farms] = useFarms()
+    const [farms, setFarms] = useState(localStorage.getItem("pools") ? JSON.parse(localStorage.getItem("pools")) : [])
+
+    const sushi = useSushi()
+
+    const chainId = 0;
+    if (ethereum) {
+        // @ts-ignore
+        window.eth = ethereum
+        const chainId = Number(ethereum.chainId)
+    }
+
+    useEffect(() => {
+        async function fetchFarms() {
+            //const [farms] = useFarms()
+            let pools = await supportedPools(sushi, getMasterChefContract(sushi), chainId, false, ethereum);
+            setFarms(pools)
+        }
+        if (ethereum) {
+            fetchFarms()
+        }
+    }, [sushi, setFarms, ethereum])
+
+    const allStakedValue = useAllStakedValue(farms)
 
     useEffect(() => {
         async function fetchTotalSupply() {
@@ -95,13 +141,13 @@ const Balances: React.FC = () => {
         function fetchTVL() {
             if (allStakedValue && allStakedValue.length) {
                 const sumWeth = farms.reduce(
-                    (c, {id}, i) => c + (allStakedValue[i].totalWethValue.toNumber() || 0),
+                    (c : any, {id} : any, i : any) => c + (allStakedValue[i].totalWethValue.toNumber() || 0),
                     0,
                 )
 
                 console.log('Total ETH value LPs represent =', sumWeth, 'ETH')
                 console.log(
-                    farms.map(({tokenSymbol}, i) => {
+                    farms.map(({tokenSymbol} : any, i : any) => {
                         console.log(
                             tokenSymbol,
                             allStakedValue[i].tokenAmount.toNumber(),
@@ -296,18 +342,19 @@ const Balances: React.FC = () => {
                             </StyledBalance>
                         </StyledBalances>
                     </CardContent>
+                    {/*
                     <Footnote>
                         Pending harvest
                         <FootnoteValue>
                             <PendingRewards/> TOAST
                         </FootnoteValue>
-                    </Footnote>
+                    </Footnote>*/}
                 </Card>
                 <Spacer/>
 
                 <Card>
                     <CardContent>
-                        <Label text="Total TOAST Supply"/>
+                        <Label text="Total TOAST Supply (+1000 per block)"/>
                         {totalSupply &&
                         <Value
                             value={getBalanceNumber(totalSupply)}
@@ -317,10 +364,6 @@ const Balances: React.FC = () => {
                         <AccountButton />
                         }
                     </CardContent>
-                    <Footnote>
-                        New rewards per block
-                        <FootnoteValue>1,000 TOAST</FootnoteValue>
-                    </Footnote>
                 </Card>
             </StyledWrapper>
 

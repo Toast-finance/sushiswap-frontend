@@ -43,3 +43,48 @@ export const getBalance = async (
     return '0'
   }
 }
+
+export const getSymbol = async (
+    provider: provider,
+    tokenAddress: string,
+): Promise<string> => {
+  const lpContract = getContract(provider, tokenAddress)
+  try {
+    const balance: string = await lpContract.methods
+        .symbol()
+        .call()
+    return balance
+  } catch (e) {
+    return '1'
+  }
+}
+
+export const getToken0 = async (
+    provider: provider,
+    tokenAddress: string,
+): Promise<string> => {
+  const lpContract = getContract(provider, tokenAddress)
+  try {
+    const balance: string = await lpContract.methods
+        .token0()
+        .call()
+    return balance
+  } catch (e) {
+    return '0'
+  }
+}
+
+export const getToken1 = async (
+    provider: provider,
+    tokenAddress: string,
+): Promise<string> => {
+  const lpContract = getContract(provider, tokenAddress)
+  try {
+    const balance: string = await lpContract.methods
+        .token1()
+        .call()
+    return balance
+  } catch (e) {
+    return '0'
+  }
+}

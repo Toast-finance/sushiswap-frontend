@@ -1,4 +1,7 @@
 import BigNumber from 'bignumber.js/bignumber'
+import UNIV2PairAbi from "./abi/uni_v2_lp.json";
+import ERC20Abi from "./abi/erc20.json";
+import {getContract, getSymbol, getToken0, getToken1} from "../../utils/erc20";
 
 export const SUBTRACT_GAS_LIMIT = 100000
 
@@ -53,31 +56,218 @@ TOAST - 0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47
 7   EGGS-TOAST 0x324286662f6d9255fBB006D160692e294bDaA920
 */
 
-export const supportedPools = async (masterChefContract) => {
+export const supportedPools = async (sushi, masterChefContract, networkId, web3, ethereum) => {
     let pools = [];
 
-    //const poolLength = await masterChefContract.methods.poolLength().call()
-    //console.log(poolLength);
+    if (masterChefContract) {
+        const poolLength = await masterChefContract.methods.poolLength().call()
+        console.log(poolLength);
 
-    for (let i = 0; i < poolLength; i++) {
-        const pool = await masterChefContract.methods.poolInfo(i).call()
-        console.log(pool)
-        pools.push(
-            {
-                pid: 0,
-                lpAddresses: {
-                    1: "0x2209b8260110af927AF0f2Eb96db471aE3Ab05EA",
-                },
-                tokenAddresses: {
-                    1: '0x19810559df63f19cfe88923313250550edadb743',
-                },
-                name: '',
-                symbol: 'HOUSE-ETH UNI-V2 LP',
-                tokenSymbol: 'HOUSE',
-                icon: '🏠',
+        for (let i = 0; i < poolLength; i++) {
+            const pool = await masterChefContract.methods.poolInfo(i).call()
+            let symbol = await getSymbol(ethereum, pool.lpToken);
+            const token0 = await getToken0(ethereum, pool.lpToken);
+            let token1 = "";
+            if (token0 !== "0") {
+                const symbol0 = await getSymbol(ethereum, token0);
+                token1 = await getToken1(ethereum, pool.lpToken);
+                const symbol1 = await getSymbol(ethereum, token1);
+                symbol = symbol0 + "-" + symbol1 + " " + symbol;
             }
+
+            let icon = "﹖";
+            switch (symbol.substr(0, 1)) {
+                case "A":
+                    icon = "🍎";
+                    break;
+                case "B":
+                    icon = "🍌";
+                    break;
+                case "C":
+                    icon = "☕️";
+                    break;
+                case "D":
+                    icon = "🍩";
+                    break;
+                case "E":
+                    icon = "🍆";
+                    break;
+                case "F":
+                    icon = "🐟";
+                    break;
+                case "G":
+                    icon = "🍇";
+                    break;
+                case "H":
+                    icon = "🍯";
+                    break;
+                case "I":
+                    icon = "🍦";
+                    break;
+                case "J":
+                    icon = "🧃";
+                    break;
+                case "K":
+                    icon = "🥝";
+                    break;
+                case "L":
+                    icon = "🍋";
+                    break;
+                case "M":
+                    icon = "🍈";
+                    break;
+                case "N":
+                    icon = "🥜";
+                    break;
+                case "O":
+                    icon = "🍊";
+                    break;
+                case "P":
+                    icon = "🍑";
+                    break;
+                case "Q":
+                    icon = "🥧";
+                    break;
+                case "R":
+                    icon = "🍚";
+                    break;
+                case "S":
+                    icon = "🍝";
+                    break;
+                case "T":
+                    icon = "🍅";
+                    break;
+                case "U":
+                    icon = "🍣";
+                    break;
+                case "V":
+                    icon = "🥗";
+                    break;
+                case "W":
+                    icon = "🍷";
+                    break;
+                case "X":
+                    icon = "💋";
+                    break;
+                case "Y":
+                    icon = "🥔";
+                    break;
+                case "Z":
+                    icon = "💤";
+                    break;
+                default:
+                    icon = "﹖";
+                    break;
+            }
+            if (pool.lpToken.toLowerCase() === "0x19810559df63f19cfe88923313250550edadb743") {
+                icon = "🏠"
+            }
+            if (pool.lpToken.toLowerCase() === "0x774adc647a8d27947c8d7c098cdb4cdf30b126de") {
+                icon = "🥑"
+            }
+            if (pool.lpToken.toLowerCase() === "0x98be5a6b401b911151853d94a6052526dcb46fe3") {
+                icon = "🥚"
+            }
+            if (pool.lpToken.toLowerCase() === "0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47") {
+                icon = "🍞"
+            }
+            if (token0 !== "0") {
+                icon = "";
+                if (token0.toLowerCase() === "0x19810559df63f19cfe88923313250550edadb743") {
+                    icon += "🏠"
+                }
+                if (token0.toLowerCase() === "0x774adc647a8d27947c8d7c098cdb4cdf30b126de") {
+                    icon += "🥑"
+                }
+                if (token0.toLowerCase() === "0x98be5a6b401b911151853d94a6052526dcb46fe3") {
+                    icon += "🥚"
+                }
+                if (token0.toLowerCase() === "0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47") {
+                    icon += "🍞"
+                }
+                if (token1.toLowerCase() === "0x19810559df63f19cfe88923313250550edadb743") {
+                    icon += "🏠"
+                }
+                if (token1.toLowerCase() === "0x774adc647a8d27947c8d7c098cdb4cdf30b126de") {
+                    icon += "🥑"
+                }
+                if (token1.toLowerCase() === "0x98be5a6b401b911151853d94a6052526dcb46fe3") {
+                    icon += "🥚"
+                }
+                if (token1.toLowerCase() === "0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47") {
+                    icon += "🍞"
+                }
+                icon += "🦄";
+            }
+
+            console.log(pool)
+
+            pools.push(
+                {
+                    pid: i,
+                    lpAddresses: {
+                        1: pool.lpToken,
+                    },
+                    tokenAddresses: {
+                        1: token0 !== "0" ? token0 : pool.lpToken
+                    },
+                    name: '',
+                    symbol: symbol,
+                    tokenSymbol: '',
+                    icon: icon,
+                }
+            )
+        }
+        pools.map((pool) =>
+            Object.assign(pool, {
+                lpAddress: pool.lpAddresses[networkId],
+                tokenAddress: pool.tokenAddresses[networkId],
+                lpContract: getContract(ethereum, pool.lpAddresses[networkId]),
+                tokenContract: getContract(ethereum, pool.tokenAddresses[networkId]),
+            }),
+        )
+
+        const setProvider = (contract, address) => {
+            contract.setProvider(ethereum)
+            if (address) contract.options.address = address
+            else console.error('Contract address not found in network', networkId)
+        }
+        pools.forEach(
+            ({ lpContract, lpAddress, tokenContract, tokenAddress }) => {
+                setProvider(lpContract, lpAddress)
+                setProvider(tokenContract, tokenAddress)
+            },
         )
     }
+
+    pools = pools.map(
+        ({
+             pid,
+             name,
+             symbol,
+             icon,
+             tokenAddress,
+             tokenSymbol,
+             tokenContract,
+             lpAddress,
+             lpContract,
+         }) => ({
+            pid,
+            id: symbol,
+            name,
+            lpToken: symbol,
+            lpTokenAddress: lpAddress,
+            lpContract,
+            tokenAddress,
+            tokenSymbol,
+            tokenContract,
+            earnToken: 'toast',
+            earnTokenAddress: contractAddresses.sushi,
+            icon,
+        }),
+    )
+
+    localStorage.setItem('pools', JSON.stringify(pools));
 
     return pools
 }

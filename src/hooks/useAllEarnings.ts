@@ -7,12 +7,13 @@ import { useWallet } from 'use-wallet'
 import { getEarned, getMasterChefContract, getFarms } from '../sushi/utils'
 import useSushi from './useSushi'
 import useBlock from './useBlock'
+import {Farm} from "../contexts/Farms";
 
-const useAllEarnings = () => {
+const useAllEarnings = (farms : Farm[]) => {
   const [balances, setBalance] = useState([] as Array<BigNumber>)
   const { account }: { account: string; ethereum: provider } = useWallet()
   const sushi = useSushi()
-  const farms = getFarms(sushi)
+
   const masterChefContract = getMasterChefContract(sushi)
   const block = useBlock()
 

@@ -35,6 +35,7 @@ export const getSushiContract = (sushi) => {
 }
 
 export const getFarms = (sushi) => {
+  return localStorage.getItem("pools") ? JSON.parse(localStorage.getItem("pools")) : []
   if (!sushi) {
     return []
   }
@@ -94,7 +95,12 @@ export const getTotalLPWethValue = async (
   pid,
   pools,
 ) => {
+  if (!tokenContract || tokenContract.methods) {
+      return;
+  }
+
   // Get balance of the token address
+    console.log(tokenContract.methods)
   const tokenAmountWholeLP = await tokenContract.methods
     .balanceOf(lpContract.options.address)
     .call()

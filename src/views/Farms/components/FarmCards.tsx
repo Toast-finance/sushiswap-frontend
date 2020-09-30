@@ -19,20 +19,38 @@ import {getEarned, getMasterChefContract, getPoolSingleWeight, getPoolWeight} fr
 import { bnToDec } from '../../../utils'
 import {getBalanceNumber} from "../../../utils/formatBalance";
 import useEarnings from "../../../hooks/useEarnings";
+import {supportedPools} from "../../../sushi/lib/constants";
+import UNIV2PairAbi from "../../../sushi/lib/abi/uni_v2_lp.json";
+import ERC20Abi from "../../../sushi/lib/abi/erc20.json";
 
 interface FarmWithStakedValue extends Farm, StakedValue {
   apy: BigNumber
 }
 
 const FarmCards: React.FC = () => {
-  let [farms] = useFarms()
+  //const [farms] = useFarms()
+  const [farms, setFarms] = useState(localStorage.getItem("pools") ? JSON.parse(localStorage.getItem("pools")) : [])
 
   const { account } = useWallet()
-  const stakedValue = useAllStakedValue()
+  const sushi = useSushi()
 
-  const sushiIndex = farms.findIndex(
-      ({ tokenSymbol }) => tokenSymbol === 'TOAST',
-  )
+    const { ethereum }: { ethereum: any } = useWallet()
+    // @ts-ignore
+    window.eth = ethereum
+    const chainId = Number(ethereum.chainId)
+
+  useEffect(() => {
+    async function fetchFarms() {
+      //const [farms] = useFarms()
+      let pools = await supportedPools(sushi, getMasterChefContract(sushi), chainId, false, ethereum);
+      setFarms(pools)
+    }
+    fetchFarms()
+  }, [sushi, setFarms])
+
+  const stakedValue = useAllStakedValue(farms)
+
+  const sushiIndex = 1
 
   const sushiPrice =
       sushiIndex >= 0 && stakedValue[sushiIndex]
@@ -42,8 +60,8 @@ const FarmCards: React.FC = () => {
   const BLOCKS_PER_YEAR = new BigNumber(2336000)
   const SUSHI_PER_BLOCK = new BigNumber(1000)
 
-  const rows = farms.reduce<FarmWithStakedValue[][]>(
-      (farmRows, farm, i) => {
+  const rows = farms.reduce(
+      (farmRows : any, farm : any, i : any) => {
         const farmWithStakedValue = {
           ...farm,
           ...stakedValue[i],
@@ -69,9 +87,9 @@ const FarmCards: React.FC = () => {
   return (
       <StyledCards>
         {!!rows[0].length ? (
-            rows.map((farmRow, i) => (
+            rows.map((farmRow : any, i : any) => (
                 <StyledRow key={i}>
-                  {farmRow.map((farm, j) => (
+                  {farmRow.map((farm : any, j : any) => (
                       <React.Fragment key={j}>
                         <FarmCard farm={farm} />
                         {(j === 0 || j === 1) && <StyledSpacer />}
@@ -81,7 +99,7 @@ const FarmCards: React.FC = () => {
             ))
         ) : (
             <StyledLoadingWrapper>
-              <Loader text="Toasting ..." />
+              <Loader text="Preparing the toaster ..." />
             </StyledLoadingWrapper>
         )}
       </StyledCards>
@@ -123,27 +141,46 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
       setPoolWeight(weight.toNumber() / 1000)
     }
     fetchEarned()
-    fetchWeight()
+    if (sushi) {
+      fetchWeight()
+    }
   }, [sushi, lpTokenAddress, earned, setHarvestable, setPoolWeight])
 
   const poolActive = true // startTime * 1000 - Date.now() <= 0
 
   return (
       <StyledCardWrapper>
-        {farm.tokenSymbol === 'TOAST' && <StyledCardAccent />}
+        {farm.pid === 1 && <StyledCardAccent />}
         <Card>
           <CardContent>
             <StyledContent>
               <CardIcon>{farm.icon}</CardIcon>
               <StyledTitle>{farm.name}</StyledTitle>
               <StyledDetails>
-                <StyledDetail>Deposit <a href={farm.lpToken.endsWith(" BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : "https://uniswap.info/pair/" + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
-                <StyledDetail>Earn {farm.earnToken.toUpperCase()} {poolWeight > 1 ? <span>(<strong>{poolWeight}x</strong> Rewards)</span> : ""}</StyledDetail>
+                <StyledDetail>Add <a href={farm.lpToken.endsWith(" BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : "https://uniswap.info/pair/" + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
+                <StyledDetail style={{fontSize: 10, marginTop: 5, marginBottom: 5}}>({farm.lpTokenAddress})</StyledDetail>
+                <StyledDetail>Make {farm.earnToken.toUpperCase()} {poolWeight > 1 ? <span>(<strong>{poolWeight}x</strong> Rewards)</span> : ""}</StyledDetail>
               </StyledDetails>
+
+              <Spacer />
+
+              <Button
+                  disabled={!poolActive}
+                  text={poolActive ? 'Select' : undefined}
+                  to={`/farms/${farm.lpTokenAddress}`}
+              >
+                {!poolActive && (
+                    <Countdown
+                        date={new Date(startTime * 1000)}
+                        renderer={renderer}
+                    />
+                )}
+              </Button>
+              <Spacer />
 
               {harvestable > 0 &&
               <StyledDetailsHarvest>
-                {harvestable.toLocaleString('en-US')} ready to harvest
+                {harvestable.toLocaleString('en-US',  { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TOAST ready
               </StyledDetailsHarvest>
               }
 
@@ -153,22 +190,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
               </StyledDetailsHarvest>
               }
 
-              <Spacer />
-
-              <Button
-                  disabled={!poolActive}
-                  text={poolActive ? 'Select' : undefined}
-                  to={`/farms/${farm.id}`}
-              >
-                {!poolActive && (
-                    <Countdown
-                        date={new Date(startTime * 1000)}
-                        renderer={renderer}
-                    />
-                )}
-              </Button>
-
-                  <StyledInsight>
+              <StyledInsight>
                     <span>APY</span>
                     <span>
                 {farm.apy

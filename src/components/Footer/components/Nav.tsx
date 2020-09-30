@@ -49,7 +49,7 @@ const Nav: React.FC = () => {
                     TOAST Contract
                 </StyledLink>
                 <StyledLink target="_blank" href="https://gov.toast.finance/#/toast">
-                    Governance
+                    Proposals
                 </StyledLink>
             </StyledNav>
         </div>

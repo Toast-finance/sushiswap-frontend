@@ -13,6 +13,8 @@ import {
 } from '../sushi/utils'
 import useSushi from './useSushi'
 import useBlock from './useBlock'
+import {supportedPools} from "../sushi/lib/constants";
+import {Farm} from "../contexts/Farms";
 
 export interface StakedValue {
   tokenAmount: BigNumber
@@ -22,11 +24,11 @@ export interface StakedValue {
   poolWeight: BigNumber
 }
 
-const useAllStakedValue = () => {
+const useAllStakedValue = (farms : any) => {
   const [balances, setBalance] = useState([] as Array<StakedValue>)
   const { account }: { account: string; ethereum: provider } = useWallet()
   const sushi = useSushi()
-  const farms = getFarms(sushi)
+  //const farms = getFarms(sushi)
   const masterChefContract = getMasterChefContract(sushi)
   const wethContact = getWethContract(sushi)
   const block = useBlock()

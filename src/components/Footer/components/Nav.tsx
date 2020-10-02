@@ -48,6 +48,14 @@ const Nav: React.FC = () => {
                             href="https://etherscan.io/token/0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47">
                     TOAST Contract
                 </StyledLink>
+                <StyledLink target="_blank"
+                            href="https://etherscan.io/token/0xd725621e3b031d74e62c280dc0f5be0b50dfa050">
+                    MasterChef
+                </StyledLink>
+                <StyledLink target="_blank"
+                            href="https://etherscan.io/token/0xd725621e3b031d74e62c280dc0f5be0b50dfa050">
+                    HeadChef
+                </StyledLink>
                 <StyledLink target="_blank" href="https://gov.toast.finance/#/toast">
                     Proposals
                 </StyledLink>

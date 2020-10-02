@@ -27,6 +27,7 @@ import CountUp from 'react-countup'
 import AccountButton from "../../../components/TopBar/components/AccountButton";
 import useSushi from "../../../hooks/useSushi";
 import {supportedPools} from "../../../sushi/lib/constants";
+import Farm from "../../Farm";
 
 const PendingRewards: React.FC = () => {
     const [start, setStart] = useState(0)
@@ -112,11 +113,11 @@ const Balances: React.FC = () => {
 
     const sushi = useSushi()
 
-    const chainId = 0;
+    let chainId = 0;
     if (ethereum) {
         // @ts-ignore
         window.eth = ethereum
-        const chainId = Number(ethereum.chainId)
+        chainId = Number(ethereum.chainId)
     }
 
     useEffect(() => {
@@ -130,7 +131,7 @@ const Balances: React.FC = () => {
         }
     }, [sushi, setFarms, ethereum])
 
-    const allStakedValue = useAllStakedValue(farms)
+    //const allStakedValue = useAllStakedValue(farms)
 
     useEffect(() => {
         async function fetchTotalSupply() {
@@ -139,9 +140,17 @@ const Balances: React.FC = () => {
         }
 
         function fetchTVL() {
-            if (allStakedValue && allStakedValue.length) {
+            if (!farms || farms.length === 0) {
+                return;
+            }
+
+            let tvl = 0;
+            farms.forEach((farm : any) => {
+                tvl += farm.value.totalWethValue instanceof BigNumber ? farm.value.totalWethValue.toNumber() : Number(farm.value.totalWethValue)
+            });
+            /*if (allStakedValue && allStakedValue.length) {
                 const sumWeth = farms.reduce(
-                    (c : any, {id} : any, i : any) => c + (allStakedValue[i].totalWethValue.toNumber() || 0),
+                    (c : any, {id} : any, i : any) => c + (allStakedValue[i] ? allStakedValue[i].totalWethValue.toNumber() : 0 || 0),
                     0,
                 )
 
@@ -158,14 +167,16 @@ const Balances: React.FC = () => {
                 )
 
                 setTVL(sumWeth);
-            }
+            }*/
+            console.log("tvl: " + tvl)
+            setTVL(tvl)
         }
 
         if (yam) {
             fetchTotalSupply()
         }
         fetchTVL()
-    }, [yam, setTotalSupply, allStakedValue, farms, setTVL])
+    }, [yam, setTotalSupply, farms, setTVL])
 
     return (
         <div>
@@ -173,13 +184,13 @@ const Balances: React.FC = () => {
                 <Card>
                     <CardContent>
                         <Label text="Total Value Locked"/>
-                        {!!account && TVL > 0 &&
+                        {TVL > 0 &&
                         <StyledValue>{TVL.toFixed(2)} ETH</StyledValue>
                         }
-                        {!!account && TVL == null &&
+                        {(TVL == 0 || TVL == null) && !!account &&
                         <StyledValue>Loading ...</StyledValue>
                         }
-                        {!!!account &&
+                        {(TVL == 0 || TVL == null) && !!!account &&
                         <div style={{marginTop: '0.65rem'}}>
                         <AccountButton />
                         </div>

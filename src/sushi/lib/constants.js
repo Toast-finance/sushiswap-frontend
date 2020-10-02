@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js/bignumber'
 import UNIV2PairAbi from "./abi/uni_v2_lp.json";
 import ERC20Abi from "./abi/erc20.json";
 import {getContract, getSymbol, getToken0, getToken1} from "../../utils/erc20";
+import {getMasterChefContract, getTotalLPWethValue, getWethContract} from "../utils";
 
 export const SUBTRACT_GAS_LIMIT = 100000
 
@@ -209,7 +210,8 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
                         1: pool.lpToken,
                     },
                     tokenAddresses: {
-                        1: token0 !== "0" ? token0 : pool.lpToken
+                        1: token0 !== "0" ? token0 : pool.lpToken,
+                        2: token1 !== "0" ? token1 : pool.lpToken
                     },
                     name: '',
                     symbol: symbol,
@@ -224,6 +226,7 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
                 tokenAddress: pool.tokenAddresses[networkId],
                 lpContract: getContract(ethereum, pool.lpAddresses[networkId]),
                 tokenContract: getContract(ethereum, pool.tokenAddresses[networkId]),
+                tokenContract2: getContract(ethereum, pool.tokenAddresses[2]),
             }),
         )
 
@@ -240,8 +243,8 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
         )
     }
 
-    pools = pools.map(
-        ({
+    pools = await Promise.all(pools.map(
+        async ({
              pid,
              name,
              symbol,
@@ -264,201 +267,202 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
             earnToken: 'toast',
             earnTokenAddress: contractAddresses.sushi,
             icon,
+            value: await getTotalLPWethValue(getMasterChefContract(sushi), getWethContract(sushi), pid, pools)
         }),
-    )
+    ))
 
     localStorage.setItem('pools', JSON.stringify(pools));
+    console.log("pools:")
+    console.log(pools)
 
     return pools
 }
 
-/*export const supportedPools = [
-    {
-        pid: 0,
-        lpAddresses: {
-            1: '0x2209b8260110af927AF0f2Eb96db471aE3Ab05EA',
-        },
-        tokenAddresses: {
-            1: '0x19810559df63f19cfe88923313250550edadb743',
-        },
-        name: '',
-        symbol: 'HOUSE-ETH UNI-V2 LP',
-        tokenSymbol: 'HOUSE',
-        icon: '🏠',
-    },
-    {
-        pid: 1,
-        lpAddresses: {
-            1: '0x5690EF1f923007912C29Cf746751BFeAf3435129',
-        },
-        tokenAddresses: {
-            1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
-        },
-        name: '',
-        symbol: 'TOAST-ETH UNI-V2 LP',
-        tokenSymbol: 'TOAST',
-        icon: '🍞',
-    },
-    {
-        pid: 11,
-        lpAddresses: {
-            1: '0x767a1678519661605e712439cf826ea39986f7c9',
-        },
-        tokenAddresses: {
-            1: '0x767a1678519661605e712439cf826ea39986f7c9',
-        },
-        name: '',
-        symbol: 'TOASTER BPT',
-        tokenSymbol: 'BPT',
-        icon: '🏠🥑🥚🍞',
-    },
-    {
-        pid: 2,
-        lpAddresses: {
-            1: '0xBDdE248cfe84258E16dBf3911C1Ce9c93beB3EB9',
-        },
-        tokenAddresses: {
-            1: '0x19810559df63f19cfe88923313250550edadb743',
-            2: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
-        },
-        name: '',
-        symbol: 'HOUSE-AVO UNI-V2 LP',
-        tokenSymbol: '',
-        icon: '🏠🥑',
-    },
-    {
-        pid: 3,
-        lpAddresses: {
-            1: '0x6a81Ef228cfc8964F76F43cdecdcCCAD191baD5f',
-        },
-        tokenAddresses: {
-            1: '0x19810559df63f19cfe88923313250550edadb743',
-            2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
-        },
-        name: '',
-        symbol: 'HOUSE-EGGS UNI-V2 LP',
-        tokenSymbol: '',
-        icon: '🏠🥚',
-    },
-    {
-        pid: 4,
-        lpAddresses: {
-            1: '0x7978211A31491Af5222B56fbeBBbc67cbf3689fB',
-        },
-        tokenAddresses: {
-            1: '0x19810559df63f19cfe88923313250550edadb743',
-            2: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
-        },
-        name: '',
-        symbol: 'HOUSE-TOAST UNI-V2 LP',
-        tokenSymbol: '',
-        icon: '🏠🍞',
-    },
-    {
-        pid: 5,
-        lpAddresses: {
-            1: '0x179bE6f0c2cb1558C8C5958b27C7d0951F546ECF',
-        },
-        tokenAddresses: {
-            1: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
-            2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
-        },
-        name: '',
-        symbol: 'AVO-EGGS UNI-V2 LP',
-        tokenSymbol: '',
-        icon: '🥑🥚',
-    },
-    {
-        pid: 6,
-        lpAddresses: {
-            1: '0xDcd212e89cCc65ece9e2CFF7AAe35624A269b092',
-        },
-        tokenAddresses: {
-            2: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
-            1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
-        },
-        name: '',
-        symbol: 'AVO-TOAST UNI-V2 LP',
-        tokenSymbol: '',
-        icon: '🥑🍞',
-    },
-    {
-        pid: 7,
-        lpAddresses: {
-            1: '0x324286662f6d9255fBB006D160692e294bDaA920',
-        },
-        tokenAddresses: {
-            2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
-            1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
-        },
-        name: '',
-        symbol: 'EGGS-TOAST UNI-V2 LP',
-        tokenSymbol: '',
-        icon: '🥚🍞',
-    },
-    {
-        pid: 8,
-        lpAddresses: {
-            1: '0xddf9b7a31b32ebaf5c064c80900046c9e5b7c65f',
-        },
-        tokenAddresses: {
-            1: '0x2ba592f78db6436527729929aaf6c908497cb200',
-        },
-        name: '',
-        symbol: 'CREAM-ETH UNI-V2 LP',
-        tokenSymbol: 'CREAM',
-        icon: '🍦',
-    },
-    {
-        pid: 9,
-        lpAddresses: {
-            1: '0xc139d8450177c0b8c3788608518687b585f7ae5a',
-        },
-        tokenAddresses: {
-            1: '0xb8baa0e4287890a5f79863ab62b7f175cecbd433',
-        },
-        name: '',
-        symbol: 'SWRV-ETH UNI-V2 LP',
-        tokenSymbol: 'SWRV',
-        icon: '↩️',
-    },
-    {
-        pid: 10,
-        lpAddresses: {
-            1: '0xcb4f983e705caeb7217c5c3785001cb138115f0b',
-        },
-        tokenAddresses: {
-            1: '0x45f24baeef268bb6d63aee5129015d69702bcdfa',
-        },
-        name: '',
-        symbol: 'YFV-ETH UNI-V2 LP',
-        tokenSymbol: 'YFV',
-        icon: '📈',
-    },
-    {
-        pid: 12,
-        lpAddresses: {
-            1: '0x8f1a125b6e3cc83855e8e36a5fde65a2453ab395',
-        },
-        tokenAddresses: {
-            1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
-        },
-        name: '',
-        symbol: 'UNI-TOAST UNI-V2 LP',
-        tokenSymbol: '',
-        icon: '🦄🍞',
-    },
-    {
-        pid: 13,
-        lpAddresses: {
-            1: '0xcd461B73D5FC8eA1D69A600f44618BDFaC98364D',
-        },
-        tokenAddresses: {
-            1: '0xcd461B73D5FC8eA1D69A600f44618BDFaC98364D',
-        },
-        name: '',
-        symbol: 'Statera Phoenix BPT',
-        tokenSymbol: '',
-        icon: '🦅',
-    },
-]*/
+export const supportedPools2 = async (sushi, masterChefContract, networkId, web3, ethereum) => {
+    let pools = [];
+
+    if (masterChefContract) {
+        pools = [
+            {
+                pid: 0,
+                lpAddresses: {
+                    1: '0x2209b8260110af927AF0f2Eb96db471aE3Ab05EA',
+                },
+                tokenAddresses: {
+                    1: '0x19810559df63f19cfe88923313250550edadb743',
+                },
+                name: '',
+                symbol: 'HOUSE-WETH UNI-V2 LP',
+                tokenSymbol: 'HOUSE',
+                icon: '🏠🦄',
+            },
+            {
+                pid: 1,
+                lpAddresses: {
+                    1: '0x5690EF1f923007912C29Cf746751BFeAf3435129',
+                },
+                tokenAddresses: {
+                    1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+                },
+                name: '',
+                symbol: 'TOAST-WETH UNI-V2 LP',
+                tokenSymbol: 'TOAST',
+                icon: '🍞🦄',
+            },
+            {
+                pid: 11,
+                lpAddresses: {
+                    1: '0x767a1678519661605e712439cf826ea39986f7c9',
+                },
+                tokenAddresses: {
+                    1: '0x767a1678519661605e712439cf826ea39986f7c9',
+                },
+                name: '',
+                symbol: 'TOASTER BPT',
+                tokenSymbol: 'BPT',
+                icon: '🏠🥑🥚🍞',
+            },
+            {
+                pid: 2,
+                lpAddresses: {
+                    1: '0xBDdE248cfe84258E16dBf3911C1Ce9c93beB3EB9',
+                },
+                tokenAddresses: {
+                    1: '0x19810559df63f19cfe88923313250550edadb743',
+                    2: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
+                },
+                name: '',
+                symbol: 'HOUSE-AVO UNI-V2 LP',
+                tokenSymbol: '',
+                icon: '🏠🥑🦄',
+            },
+            {
+                pid: 3,
+                lpAddresses: {
+                    1: '0x6a81Ef228cfc8964F76F43cdecdcCCAD191baD5f',
+                },
+                tokenAddresses: {
+                    1: '0x19810559df63f19cfe88923313250550edadb743',
+                    2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
+                },
+                name: '',
+                symbol: 'HOUSE-EGGS UNI-V2 LP',
+                tokenSymbol: '',
+                icon: '🏠🥚🦄',
+            },
+            {
+                pid: 4,
+                lpAddresses: {
+                    1: '0x7978211A31491Af5222B56fbeBBbc67cbf3689fB',
+                },
+                tokenAddresses: {
+                    1: '0x19810559df63f19cfe88923313250550edadb743',
+                    2: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+                },
+                name: '',
+                symbol: 'HOUSE-TOAST UNI-V2 LP',
+                tokenSymbol: '',
+                icon: '🏠🍞🦄',
+            },
+            {
+                pid: 5,
+                lpAddresses: {
+                    1: '0x179bE6f0c2cb1558C8C5958b27C7d0951F546ECF',
+                },
+                tokenAddresses: {
+                    1: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
+                    2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
+                },
+                name: '',
+                symbol: 'AVO-EGGS UNI-V2 LP',
+                tokenSymbol: '',
+                icon: '🥑🥚🦄',
+            },
+            {
+                pid: 6,
+                lpAddresses: {
+                    1: '0xDcd212e89cCc65ece9e2CFF7AAe35624A269b092',
+                },
+                tokenAddresses: {
+                    2: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
+                    1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+                },
+                name: '',
+                symbol: 'AVO-TOAST UNI-V2 LP',
+                tokenSymbol: '',
+                icon: '🥑🍞🦄',
+            },
+            {
+                pid: 7,
+                lpAddresses: {
+                    1: '0x324286662f6d9255fBB006D160692e294bDaA920',
+                },
+                tokenAddresses: {
+                    2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
+                    1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+                },
+                name: '',
+                symbol: 'TOAST-EGGS UNI-V2 LP',
+                tokenSymbol: '',
+                icon: '🍞🥚🦄',
+            },
+        ]
+
+        pools.map((pool) =>
+            Object.assign(pool, {
+                lpAddress: pool.lpAddresses[networkId],
+                tokenAddress: pool.tokenAddresses[networkId],
+                lpContract: getContract(ethereum, pool.lpAddresses[networkId]),
+                tokenContract: getContract(ethereum, pool.tokenAddresses[networkId]),
+                tokenContract2: getContract(ethereum, pool.tokenAddresses[2]),
+            }),
+        )
+
+        const setProvider = (contract, address) => {
+            contract.setProvider(ethereum)
+            if (address) contract.options.address = address
+            else console.error('Contract address not found in network', networkId)
+        }
+        pools.forEach(
+            ({ lpContract, lpAddress, tokenContract, tokenAddress }) => {
+                setProvider(lpContract, lpAddress)
+                setProvider(tokenContract, tokenAddress)
+            },
+        )
+    }
+
+    pools = await Promise.all(pools.map(
+        async ({
+                   pid,
+                   name,
+                   symbol,
+                   icon,
+                   tokenAddress,
+                   tokenSymbol,
+                   tokenContract,
+                   lpAddress,
+                   lpContract,
+               }) => ({
+            pid,
+            id: symbol,
+            name,
+            lpToken: symbol,
+            lpTokenAddress: lpAddress,
+            lpContract,
+            tokenAddress,
+            tokenSymbol,
+            tokenContract,
+            earnToken: 'toast',
+            earnTokenAddress: contractAddresses.sushi,
+            icon,
+            value: await getTotalLPWethValue(getMasterChefContract(sushi), getWethContract(sushi), pid, pools)
+        }),
+    ))
+
+    localStorage.setItem('farms', JSON.stringify(pools));
+    console.log("pools:")
+    console.log(pools)
+
+    return pools
+}
+

@@ -87,63 +87,85 @@ export const getEarned = async (masterChefContract, pid, account) => {
 }
 
 export const getTotalLPWethValue = async (
-  sushi,
   masterChefContract,
   wethContract,
-  lpContract,
-  tokenContract,
   pid,
   pools,
 ) => {
-  if (!tokenContract || tokenContract.methods) {
-      return;
+
+  if (pools.length === 0 || !pools[pid] || !pools[pid].tokenContract.methods.balanceOf || !pools[pid].lpContract.methods.balanceOf) {
+      return {
+          tokenAmount: new BigNumber(0),
+          wethAmount : new BigNumber(0),
+          totalWethValue: new BigNumber(0),
+          tokenPriceInWeth: new BigNumber(0),
+          poolWeight: new BigNumber(0),
+      };
   }
 
   // Get balance of the token address
-    console.log(tokenContract.methods)
-  const tokenAmountWholeLP = await tokenContract.methods
-    .balanceOf(lpContract.options.address)
+  const tokenAmountWholeLP = await pools[pid].tokenContract.methods
+    .balanceOf(pools[pid].lpAddress)
     .call()
-  const tokenDecimals = await tokenContract.methods.decimals().call()
+  const tokenDecimals = await pools[pid].tokenContract.methods.decimals().call()
   // Get the share of lpContract that masterChefContract owns
-  const balance = await lpContract.methods
+  const balance = await pools[pid].lpContract.methods
     .balanceOf(masterChefContract.options.address)
     .call()
   // Convert that into the portion of total lpContract = p1
-  const totalSupply = await lpContract.methods.totalSupply().call()
+  const totalSupply = await pools[pid].lpContract.methods.totalSupply().call()
   // Get total weth value for the lpContract = w1
   let lpContractWeth = await wethContract.methods
-    .balanceOf(lpContract.options.address)
+    .balanceOf(pools[pid].lpAddress)
     .call()
 
   if (lpContractWeth == 0) {
-    const tokenBalance = await tokenContract.methods
-        .balanceOf(lpContract.options.address)
+    const tokenBalance = await pools[pid].tokenContract.methods
+        .balanceOf(pools[pid].lpAddress)
         .call()
-    const balance2index = pools.findIndex(pool => pool.tokenAddresses[1].toLowerCase() == tokenContract.options.address.toString().toLowerCase());
-    let lpContractOtherToken = await tokenContract.methods
-        .balanceOf(sushi.contracts.pools[balance2index].lpContract.options.address)
-        .call()
-    lpContractWeth = await wethContract.methods
-        .balanceOf(sushi.contracts.pools[balance2index].lpContract.options.address)
-        .call() * tokenBalance / lpContractOtherToken;
+    const balance2index = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[1].toLowerCase() == pools[pid].tokenAddresses[1].toString().toLowerCase());
+    if (balance2index >= 0) {
+        let lpContractOtherToken = await pools[pid].tokenContract.methods
+            .balanceOf(pools[balance2index].lpAddress)
+            .call()
+        lpContractWeth = await wethContract.methods
+            .balanceOf(pools[balance2index].lpAddress)
+            .call() * tokenBalance / lpContractOtherToken;
+    }
+
+      if (lpContractWeth == 0) {
+          const tokenBalance = await pools[pid].tokenContract2.methods
+              .balanceOf(pools[pid].lpAddress)
+              .call()
+          const balance2index = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[1].toLowerCase() == pools[pid].tokenAddresses[2].toString().toLowerCase());
+          if (balance2index >= 0) {
+          let lpContractOtherToken = await pools[pid].tokenContract2.methods
+              .balanceOf(pools[balance2index].lpAddress)
+              .call()
+          lpContractWeth = await wethContract.methods
+              .balanceOf(pools[balance2index].lpAddress)
+              .call() * tokenBalance / lpContractOtherToken;
+          }
+      }
 
     if (lpContractWeth == 0) {
-      const firstStepIndex = pools.findIndex(pool => pool.tokenAddresses[2] && pool.tokenAddresses[2].toLowerCase() == tokenContract.options.address.toString().toLowerCase());
-      let firstStepTokenBalance = await tokenContract.methods
-          .balanceOf(sushi.contracts.pools[firstStepIndex].lpContract.options.address)
-          .call()
+      const firstStepIndex = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[2] && pool.tokenAddresses[2].toLowerCase() == pools[pid].tokenAddress.toString().toLowerCase());
+      if (firstStepIndex >= 0) {
+          let firstStepTokenBalance = await pools[pid].tokenContract.methods
+              .balanceOf(pools[firstStepIndex].lpAddress)
+              .call()
 
-      let secondStepTokenBalance = await sushi.contracts.pools[firstStepIndex].tokenContract.methods
-          .balanceOf(sushi.contracts.pools[firstStepIndex].lpContract.options.address)
-          .call()
-      const secondStepIndex = pools.findIndex(pool => pool.tokenAddresses[1].toLowerCase() == sushi.contracts.pools[firstStepIndex].tokenContract.options.address.toString().toLowerCase());
-      let thirdStepTokenBalance = await sushi.contracts.pools[firstStepIndex].tokenContract.methods
-          .balanceOf(sushi.contracts.pools[secondStepIndex].lpContract.options.address)
-          .call()
-      lpContractWeth = await wethContract.methods
-          .balanceOf(sushi.contracts.pools[secondStepIndex].lpContract.options.address)
-          .call() * secondStepTokenBalance / thirdStepTokenBalance * tokenBalance / firstStepTokenBalance;
+          let secondStepTokenBalance = await pools[firstStepIndex].tokenContract.methods
+              .balanceOf(pools[firstStepIndex].lpAddress)
+              .call()
+          const secondStepIndex = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[1].toLowerCase() == pools[firstStepIndex].tokenAddress.toString().toLowerCase());
+          let thirdStepTokenBalance = await pools[firstStepIndex].tokenContract.methods
+              .balanceOf(pools[secondStepIndex].lpAddress)
+              .call()
+          lpContractWeth = await wethContract.methods
+              .balanceOf(pools[secondStepIndex].lpAddress)
+              .call() * secondStepTokenBalance / thirdStepTokenBalance * tokenBalance / firstStepTokenBalance;
+      }
     }
 
   }

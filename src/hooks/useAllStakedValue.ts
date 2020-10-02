@@ -25,6 +25,9 @@ export interface StakedValue {
 }
 
 const useAllStakedValue = (farms : any) => {
+  console.log("useAllStakedValue with farms:")
+  console.log(farms)
+
   const [balances, setBalance] = useState([] as Array<StakedValue>)
   const { account }: { account: string; ethereum: provider } = useWallet()
   const sushi = useSushi()
@@ -38,19 +41,12 @@ const useAllStakedValue = (farms : any) => {
       farms.map(
         ({
           pid,
-          lpContract,
-          tokenContract,
         }: {
           pid: number
-          lpContract: Contract
-          tokenContract: Contract
         }) =>
           getTotalLPWethValue(
-            sushi,
             masterChefContract,
             wethContact,
-            lpContract,
-            tokenContract,
             pid,
             farms,
           ),

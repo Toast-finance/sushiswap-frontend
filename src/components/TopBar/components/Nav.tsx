@@ -5,18 +5,12 @@ import styled from 'styled-components'
 const Nav: React.FC = () => {
   return (
     <StyledNav>
-      <StyledLink exact activeClassName="active" to="/">
-        Home
-      </StyledLink>
       <StyledLink exact activeClassName="active" to="/farms">
-        Start Toasting
+        Our Recipes
       </StyledLink>
-      <StyledAbsoluteLink
-        href="https://old.toast.finance/staking"
-        target={"_blank"}
-      >
-        Original Snacks
-      </StyledAbsoluteLink>
+        <StyledLink exact activeClassName="active" to="/community">
+            Community Recipes
+        </StyledLink>
     </StyledNav>
   )
 }

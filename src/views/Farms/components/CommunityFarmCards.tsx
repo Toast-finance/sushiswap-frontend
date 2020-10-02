@@ -19,7 +19,7 @@ import {getEarned, getMasterChefContract, getPoolSingleWeight, getPoolWeight} fr
 import { bnToDec } from '../../../utils'
 import {getBalanceNumber} from "../../../utils/formatBalance";
 import useEarnings from "../../../hooks/useEarnings";
-import {supportedPools, supportedPools2} from "../../../sushi/lib/constants";
+import {supportedPools} from "../../../sushi/lib/constants";
 import UNIV2PairAbi from "../../../sushi/lib/abi/uni_v2_lp.json";
 import ERC20Abi from "../../../sushi/lib/abi/erc20.json";
 
@@ -29,7 +29,7 @@ interface FarmWithStakedValue extends Farm, StakedValue {
 
 const FarmCards: React.FC = () => {
   //const [farms] = useFarms()
-  const [farms, setFarms] = useState(localStorage.getItem("farms") ? JSON.parse(localStorage.getItem("farms")) : [])
+  const [farms, setFarms] = useState(localStorage.getItem("pools") ? JSON.parse(localStorage.getItem("pools")) : [])
 
   const { account } = useWallet()
   const sushi = useSushi()
@@ -42,7 +42,7 @@ const FarmCards: React.FC = () => {
   useEffect(() => {
     async function fetchFarms() {
       //const [farms] = useFarms()
-      let pools = await supportedPools2(sushi, getMasterChefContract(sushi), chainId, false, ethereum);
+      let pools = await supportedPools(sushi, getMasterChefContract(sushi), chainId, false, ethereum);
       setFarms(pools)
 
     }
@@ -72,11 +72,13 @@ const FarmCards: React.FC = () => {
               : null,
         }
         const newFarmRows = [...farmRows]
-        if (newFarmRows[newFarmRows.length - 1].length === 3) {
-          newFarmRows.push([farmWithStakedValue])
-        } else {
-          newFarmRows[newFarmRows.length - 1].push(farmWithStakedValue)
-        }
+          if (![0,1,11,2,3,4,5,6,7].includes(farm.pid)) {
+              if (newFarmRows[newFarmRows.length - 1].length === 3) {
+                  newFarmRows.push([farmWithStakedValue])
+              } else {
+                  newFarmRows[newFarmRows.length - 1].push(farmWithStakedValue)
+              }
+          }
         return newFarmRows
       },
       [[]],

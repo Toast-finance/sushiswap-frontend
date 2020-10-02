@@ -12,6 +12,7 @@ import SushiProvider from './contexts/SushiProvider'
 import useModal from './hooks/useModal'
 import theme from './theme'
 import Farms from './views/Farms'
+import CommunityFarms from './views/Farms/CommunityFarms'
 import Home from './views/Home'
 
 const App: React.FC = () => {
@@ -36,6 +37,9 @@ const App: React.FC = () => {
           </Route>
           <Route path="/farms">
             <Farms />
+          </Route>
+          <Route path="/community">
+            <CommunityFarms />
           </Route>
         </Switch>
       </Router>

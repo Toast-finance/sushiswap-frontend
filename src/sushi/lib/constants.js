@@ -200,6 +200,11 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
                 icon += "🦄";
             }
 
+            if (pool.lpToken === "0xcd461B73D5FC8eA1D69A600f44618BDFaC98364D") {
+                symbol = "Statera Phoenix BPT";
+                icon = "🦅"
+            }
+
             console.log(pool)
 
             pools.push(
@@ -280,158 +285,201 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
     return pools
 }
 
+export const supportedPools3 = [
+    {
+        pid: 0,
+        earnToken: 'toast',
+        lpTokenAddress: '0x2209b8260110af927AF0f2Eb96db471aE3Ab05EA',
+        lpAddresses: {
+            1: '0x2209b8260110af927AF0f2Eb96db471aE3Ab05EA',
+        },
+        tokenAddress: '0x19810559df63f19cfe88923313250550edadb743',
+        tokenAddresses: {
+            1: '0x19810559df63f19cfe88923313250550edadb743',
+        },
+        name: '',
+        symbol: 'HOUSE-WETH UNI-V2 LP',
+        lpToken: 'HOUSE-WETH UNI-V2 LP',
+        tokenSymbol: 'HOUSE',
+        icon: '🏠🦄',
+        wethWeight: 500000000000000000,
+    },
+    {
+        pid: 1,
+        earnToken: 'toast',
+        lpTokenAddress: '0x5690EF1f923007912C29Cf746751BFeAf3435129',
+        lpAddresses: {
+            1: '0x5690EF1f923007912C29Cf746751BFeAf3435129',
+        },
+        tokenAddress: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+        tokenAddresses: {
+            1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+        },
+        name: '',
+        symbol: 'TOAST-WETH UNI-V2 LP',
+        lpToken: 'TOAST-WETH UNI-V2 LP',
+        tokenSymbol: 'TOAST',
+        icon: '🍞🦄',
+        wethWeight: 500000000000000000,
+    },
+    {
+        pid: 14,
+        earnToken: 'toast',
+        lpTokenAddress: '0x19810559dF63f19cfE88923313250550eDADB743',
+        lpAddresses: {
+            1: '0x19810559dF63f19cfE88923313250550eDADB743',
+        },
+        tokenAddress: '0x19810559dF63f19cfE88923313250550eDADB743',
+        tokenAddresses: {
+            1: '0x19810559dF63f19cfE88923313250550eDADB743',
+        },
+        name: '',
+        symbol: 'HOUSE',
+        lpToken: 'HOUSE',
+        tokenSymbol: 'HOUSE',
+        icon: '🏠',
+        wethWeight: 450000000000000000,
+        decimals: 0,
+    },
+    {
+        pid: 11,
+        earnToken: 'toast',
+        lpTokenAddress: '0x767a1678519661605e712439cf826ea39986f7c9',
+        lpAddresses: {
+            1: '0x767a1678519661605e712439cf826ea39986f7c9',
+        },
+        tokenAddress: '0x767a1678519661605e712439cf826ea39986f7c9',
+        tokenAddresses: {
+            1: '0x767a1678519661605e712439cf826ea39986f7c9',
+        },
+        name: '',
+        symbol: 'TOASTER BPT',
+        lpToken: 'TOASTER BPT',
+        tokenSymbol: 'BPT',
+        icon: '🏠🥑🥚🍞',
+        wethWeight: 450000000000000000,
+    },
+    {
+        pid: 2,
+        earnToken: 'toast',
+        lpTokenAddress: '0xBDdE248cfe84258E16dBf3911C1Ce9c93beB3EB9',
+        lpAddresses: {
+            1: '0xBDdE248cfe84258E16dBf3911C1Ce9c93beB3EB9',
+        },
+        tokenAddress: '0x19810559df63f19cfe88923313250550edadb743',
+        tokenAddresses: {
+            1: '0x19810559df63f19cfe88923313250550edadb743',
+            2: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
+        },
+        name: '',
+        symbol: 'HOUSE-AVO UNI-V2 LP',
+        lpToken: 'HOUSE-AVO UNI-V2 LP',
+        tokenSymbol: '',
+        icon: '🏠🥑🦄',
+        wethWeight: 500000000000000000,
+    },
+    {
+        pid: 3,
+        earnToken: 'toast',
+        lpTokenAddress: '0x6a81Ef228cfc8964F76F43cdecdcCCAD191baD5f',
+        lpAddresses: {
+            1: '0x6a81Ef228cfc8964F76F43cdecdcCCAD191baD5f',
+        },
+        tokenAddress: '0x19810559df63f19cfe88923313250550edadb743',
+        tokenAddresses: {
+            1: '0x19810559df63f19cfe88923313250550edadb743',
+            2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
+        },
+        name: '',
+        symbol: 'HOUSE-EGGS UNI-V2 LP',
+        lpToken: 'HOUSE-EGGS UNI-V2 LP',
+        tokenSymbol: '',
+        icon: '🏠🥚🦄',
+        wethWeight: 500000000000000000,
+    },
+    {
+        pid: 4,
+        earnToken: 'toast',
+        lpTokenAddress: '0x7978211A31491Af5222B56fbeBBbc67cbf3689fB',
+        lpAddresses: {
+            1: '0x7978211A31491Af5222B56fbeBBbc67cbf3689fB',
+        },
+        tokenAddress: '0x19810559df63f19cfe88923313250550edadb743',
+        tokenAddresses: {
+            1: '0x19810559df63f19cfe88923313250550edadb743',
+            2: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+        },
+        name: '',
+        symbol: 'HOUSE-TOAST UNI-V2 LP',
+        lpToken: 'HOUSE-TOAST UNI-V2 LP',
+        tokenSymbol: '',
+        icon: '🏠🍞🦄',
+        wethWeight: 500000000000000000,
+    },
+    {
+        pid: 5,
+        earnToken: 'toast',
+        lpTokenAddress: '0x179bE6f0c2cb1558C8C5958b27C7d0951F546ECF',
+        lpAddresses: {
+            1: '0x179bE6f0c2cb1558C8C5958b27C7d0951F546ECF',
+        },
+        tokenAddress: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
+        tokenAddresses: {
+            1: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
+            2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
+        },
+        name: '',
+        symbol: 'AVO-EGGS UNI-V2 LP',
+        lpToken: 'AVO-EGGS UNI-V2 LP',
+        tokenSymbol: '',
+        icon: '🥑🥚🦄',
+        wethWeight: 500000000000000000,
+    },
+    {
+        pid: 6,
+        earnToken: 'toast',
+        lpTokenAddress: '0xDcd212e89cCc65ece9e2CFF7AAe35624A269b092',
+        lpAddresses: {
+            1: '0xDcd212e89cCc65ece9e2CFF7AAe35624A269b092',
+        },
+        tokenAddress: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+        tokenAddresses: {
+            2: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
+            1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+        },
+        name: '',
+        symbol: 'AVO-TOAST UNI-V2 LP',
+        lpToken: 'AVO-TOAST UNI-V2 LP',
+        tokenSymbol: '',
+        icon: '🥑🍞🦄',
+        wethWeight: 500000000000000000,
+    },
+    {
+        pid: 7,
+        earnToken: 'toast',
+        lpTokenAddress: '0x324286662f6d9255fBB006D160692e294bDaA920',
+        lpAddresses: {
+            1: '0x324286662f6d9255fBB006D160692e294bDaA920',
+        },
+        tokenAddress: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+        tokenAddresses: {
+            2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
+            1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
+        },
+        name: '',
+        symbol: 'TOAST-EGGS UNI-V2 LP',
+        lpToken: 'TOAST-EGGS UNI-V2 LP',
+        tokenSymbol: '',
+        icon: '🍞🥚🦄',
+        wethWeight: 500000000000000000,
+    },
+]
+
 export const supportedPools2 = async (sushi, masterChefContract, networkId, web3, ethereum) => {
     let pools = [];
 
     if (masterChefContract) {
-        pools = [
-            {
-                pid: 0,
-                lpAddresses: {
-                    1: '0x2209b8260110af927AF0f2Eb96db471aE3Ab05EA',
-                },
-                tokenAddresses: {
-                    1: '0x19810559df63f19cfe88923313250550edadb743',
-                },
-                name: '',
-                symbol: 'HOUSE-WETH UNI-V2 LP',
-                tokenSymbol: 'HOUSE',
-                icon: '🏠🦄',
-                wethWeight: 500000000000000000,
-            },
-            {
-                pid: 1,
-                lpAddresses: {
-                    1: '0x5690EF1f923007912C29Cf746751BFeAf3435129',
-                },
-                tokenAddresses: {
-                    1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
-                },
-                name: '',
-                symbol: 'TOAST-WETH UNI-V2 LP',
-                tokenSymbol: 'TOAST',
-                icon: '🍞🦄',
-                wethWeight: 500000000000000000,
-            },
-            {
-                pid: 14,
-                lpAddresses: {
-                    1: '0x19810559dF63f19cfE88923313250550eDADB743',
-                },
-                tokenAddresses: {
-                    1: '0x19810559dF63f19cfE88923313250550eDADB743',
-                },
-                name: '',
-                symbol: 'HOUSE',
-                tokenSymbol: 'HOUSE',
-                icon: '🏠',
-                wethWeight: 450000000000000000,
-            },
-            {
-                pid: 11,
-                lpAddresses: {
-                    1: '0x767a1678519661605e712439cf826ea39986f7c9',
-                },
-                tokenAddresses: {
-                    1: '0x767a1678519661605e712439cf826ea39986f7c9',
-                },
-                name: '',
-                symbol: 'TOASTER BPT',
-                tokenSymbol: 'BPT',
-                icon: '🏠🥑🥚🍞',
-                wethWeight: 450000000000000000,
-            },
-            {
-                pid: 2,
-                lpAddresses: {
-                    1: '0xBDdE248cfe84258E16dBf3911C1Ce9c93beB3EB9',
-                },
-                tokenAddresses: {
-                    1: '0x19810559df63f19cfe88923313250550edadb743',
-                    2: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
-                },
-                name: '',
-                symbol: 'HOUSE-AVO UNI-V2 LP',
-                tokenSymbol: '',
-                icon: '🏠🥑🦄',
-                wethWeight: 500000000000000000,
-            },
-            {
-                pid: 3,
-                lpAddresses: {
-                    1: '0x6a81Ef228cfc8964F76F43cdecdcCCAD191baD5f',
-                },
-                tokenAddresses: {
-                    1: '0x19810559df63f19cfe88923313250550edadb743',
-                    2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
-                },
-                name: '',
-                symbol: 'HOUSE-EGGS UNI-V2 LP',
-                tokenSymbol: '',
-                icon: '🏠🥚🦄',
-                wethWeight: 500000000000000000,
-            },
-            {
-                pid: 4,
-                lpAddresses: {
-                    1: '0x7978211A31491Af5222B56fbeBBbc67cbf3689fB',
-                },
-                tokenAddresses: {
-                    1: '0x19810559df63f19cfe88923313250550edadb743',
-                    2: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
-                },
-                name: '',
-                symbol: 'HOUSE-TOAST UNI-V2 LP',
-                tokenSymbol: '',
-                icon: '🏠🍞🦄',
-                wethWeight: 500000000000000000,
-            },
-            {
-                pid: 5,
-                lpAddresses: {
-                    1: '0x179bE6f0c2cb1558C8C5958b27C7d0951F546ECF',
-                },
-                tokenAddresses: {
-                    1: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
-                    2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
-                },
-                name: '',
-                symbol: 'AVO-EGGS UNI-V2 LP',
-                tokenSymbol: '',
-                icon: '🥑🥚🦄',
-                wethWeight: 500000000000000000,
-            },
-            {
-                pid: 6,
-                lpAddresses: {
-                    1: '0xDcd212e89cCc65ece9e2CFF7AAe35624A269b092',
-                },
-                tokenAddresses: {
-                    2: '0x774adc647a8d27947c8d7c098cdb4cdf30b126de',
-                    1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
-                },
-                name: '',
-                symbol: 'AVO-TOAST UNI-V2 LP',
-                tokenSymbol: '',
-                icon: '🥑🍞🦄',
-                wethWeight: 500000000000000000,
-            },
-            {
-                pid: 7,
-                lpAddresses: {
-                    1: '0x324286662f6d9255fBB006D160692e294bDaA920',
-                },
-                tokenAddresses: {
-                    2: '0x98be5a6b401b911151853d94a6052526dcb46fe3',
-                    1: '0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47',
-                },
-                name: '',
-                symbol: 'TOAST-EGGS UNI-V2 LP',
-                tokenSymbol: '',
-                icon: '🍞🥚🦄',
-                wethWeight: 500000000000000000,
-            },
-        ]
+        pools = supportedPools3
 
         pools.map((pool) =>
             Object.assign(pool, {

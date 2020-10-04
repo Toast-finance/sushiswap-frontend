@@ -123,6 +123,21 @@ export const getTotalLPWethValue = async (
     .balanceOf(pools.find(pool => pid === pool.pid).lpAddress)
     .call()
 
+    if (lpContractWeth == 0 && pools.find(pool => pid === pool.pid).lpAddress.toLowerCase() === pools.find(pool => pid === pool.pid).tokenAddresses[1].toLowerCase()) {
+        const tokenBalance = await pools.find(pool => pid === pool.pid).lpContract.methods
+            .balanceOf(masterChefContract.options.address)
+            .call()
+        const balance2index = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[1].toLowerCase() == pools.find(pool => pid === pool.pid).tokenAddresses[1].toString().toLowerCase());
+        if (balance2index >= 0) {
+            let lpContractOtherToken = await pools.find(pool => pid === pool.pid).tokenContract.methods
+                .balanceOf(pools[balance2index].lpAddress)
+                .call()
+            lpContractWeth = await wethContract.methods
+                .balanceOf(pools[balance2index].lpAddress)
+                .call() * tokenBalance / lpContractOtherToken;
+        }
+    }
+
   if (lpContractWeth == 0) {
     const tokenBalance = await pools.find(pool => pid === pool.pid).tokenContract.methods
         .balanceOf(pools.find(pool => pid === pool.pid).lpAddress)

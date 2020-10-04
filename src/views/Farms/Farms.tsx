@@ -35,7 +35,7 @@ const Farms: React.FC = () => {
                 </StyledInfo>
             </Route>
             <Route path={`${path}/:farmId`}>
-              <Farm />
+              <Farm isCommunity={false} />
             </Route>
           </>
         ) : (

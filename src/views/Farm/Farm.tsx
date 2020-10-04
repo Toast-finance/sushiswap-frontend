@@ -12,8 +12,14 @@ import { getMasterChefContract } from '../../sushi/utils'
 import { getContract } from '../../utils/erc20'
 import Harvest from './components/Harvest'
 import Stake from './components/Stake'
+import {ModalProps} from "../../components/Modal";
+import BigNumber from "bignumber.js";
 
-const Farm: React.FC = () => {
+interface FarmProps extends ModalProps {
+  isCommunity: boolean
+}
+
+const Farm: React.FC<FarmProps> = ({isCommunity = true}) => {
   const { farmId } = useParams()
   const {
     pid,
@@ -23,7 +29,8 @@ const Farm: React.FC = () => {
     earnToken,
     name,
     icon,
-  } = useFarm(farmId) || {
+    decimals,
+  } = useFarm(farmId, isCommunity) || {
     pid: 0,
     lpToken: '',
     lpTokenAddress: '',
@@ -31,6 +38,7 @@ const Farm: React.FC = () => {
     earnToken: '',
     name: '',
     icon: '',
+    decimals: 18,
   }
 
   useEffect(() => {
@@ -76,12 +84,13 @@ const Farm: React.FC = () => {
               lpContract={lpContract}
               pid={pid}
               tokenName={lpToken.toUpperCase()}
+              decimals={decimals}
             />
           </StyledCardWrapper>
         </StyledCardsWrapper>
         <Spacer size="lg" />
         <StyledInfo>
-          ⭐️ Every time you stake and unstake LP tokens, the contract will
+          ⭐️ Every time you stake and unstake, the contract will
           automagically harvest TOAST rewards for you!
         </StyledInfo>
         <Spacer size="lg" />

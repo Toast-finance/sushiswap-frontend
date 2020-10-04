@@ -73,7 +73,7 @@ const FarmCards: React.FC = () => {
         }
         const newFarmRows = [...farmRows]
           if (![0,1,14,11,2,3,4,5,6,7].includes(farm.pid)) {
-              if (newFarmRows[newFarmRows.length - 1].length === 3) {
+              if (newFarmRows[newFarmRows.length - 1].length === 4) {
                   newFarmRows.push([farmWithStakedValue])
               } else {
                   newFarmRows[newFarmRows.length - 1].push(farmWithStakedValue)
@@ -92,7 +92,7 @@ const FarmCards: React.FC = () => {
                   {farmRow.map((farm : any, j : any) => (
                       <React.Fragment key={j}>
                         <FarmCard farm={farm} />
-                        {(j === 0 || j === 1) && <StyledSpacer />}
+                        {(j === 0 || j === 1 || j === 2) && <StyledSpacer />}
                       </React.Fragment>
                   ))}
                 </StyledRow>
@@ -167,7 +167,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
               <Button
                   disabled={!poolActive}
                   text={poolActive ? 'Select' : undefined}
-                  to={`/farms/${farm.lpTokenAddress}`}
+                  to={`/community/${farm.lpTokenAddress}`}
               >
                 {!poolActive && (
                     <Countdown
@@ -262,7 +262,7 @@ const StyledCardAccent = styled.div`
 `
 
 const StyledCards = styled.div`
-  width: 900px;
+  width: 1200px;
   @media (max-width: 768px) {
     width: 100%;
   }
@@ -288,7 +288,7 @@ const StyledRow = styled.div`
 
 const StyledCardWrapper = styled.div`
   display: flex;
-  width: calc((900px - ${(props) => props.theme.spacing[4]}px * 2) / 3);
+  width: calc((1200px - ${(props) => props.theme.spacing[4]}px * 3) / 4);
   position: relative;
 `
 

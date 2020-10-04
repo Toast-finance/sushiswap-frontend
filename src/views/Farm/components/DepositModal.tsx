@@ -11,6 +11,7 @@ interface DepositModalProps extends ModalProps {
   max: BigNumber
   onConfirm: (amount: string) => void
   tokenName?: string
+  decimals?: number
 }
 
 const DepositModal: React.FC<DepositModalProps> = ({
@@ -18,33 +19,41 @@ const DepositModal: React.FC<DepositModalProps> = ({
   onConfirm,
   onDismiss,
   tokenName = '',
+  decimals = 18,
 }) => {
   const [val, setVal] = useState('')
+  const [display, setDisplay] = useState('')
   const [pendingTx, setPendingTx] = useState(false)
 
   const fullBalance = useMemo(() => {
     return getFullDisplayBalance(max)
   }, [max])
 
-  const handleChange = useCallback(
+    const fullDisplay = useMemo(() => {
+        return getFullDisplayBalance(max, decimals)
+    }, [max])
+
+    const handleChange = useCallback(
     (e: React.FormEvent<HTMLInputElement>) => {
-      setVal(e.currentTarget.value)
+      setVal((new BigNumber(e.currentTarget.value)).multipliedBy(new BigNumber(10).pow(decimals-18)).toFixed())
+      setDisplay(e.currentTarget.value)
     },
     [setVal],
   )
 
   const handleSelectMax = useCallback(() => {
     setVal(fullBalance)
-  }, [fullBalance, setVal])
+    setDisplay(fullDisplay)
+  }, [fullBalance, setVal, fullDisplay, setDisplay])
 
   return (
     <Modal>
       <ModalTitle text={`Deposit ${tokenName} Tokens`} />
       <TokenInput
-        value={val}
+        value={display}
         onSelectMax={handleSelectMax}
         onChange={handleChange}
-        max={fullBalance}
+        max={fullDisplay}
         symbol={tokenName}
       />
       <ModalActions>

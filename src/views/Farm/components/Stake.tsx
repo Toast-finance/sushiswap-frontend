@@ -25,9 +25,10 @@ interface StakeProps {
   lpContract: Contract
   pid: number
   tokenName: string
+  decimals: number
 }
 
-const Stake: React.FC<StakeProps> = ({ lpContract, pid, tokenName }) => {
+const Stake: React.FC<StakeProps> = ({ lpContract, pid, tokenName, decimals = 18 }) => {
   const [requestedApproval, setRequestedApproval] = useState(false)
 
   const allowance = useAllowance(lpContract)
@@ -44,6 +45,7 @@ const Stake: React.FC<StakeProps> = ({ lpContract, pid, tokenName }) => {
       max={tokenBalance}
       onConfirm={onStake}
       tokenName={tokenName}
+      decimals={decimals}
     />,
   )
 
@@ -52,6 +54,7 @@ const Stake: React.FC<StakeProps> = ({ lpContract, pid, tokenName }) => {
       max={stakedBalance}
       onConfirm={onUnstake}
       tokenName={tokenName}
+      decimals={decimals}
     />,
   )
 
@@ -74,7 +77,7 @@ const Stake: React.FC<StakeProps> = ({ lpContract, pid, tokenName }) => {
         <StyledCardContentInner>
           <StyledCardHeader>
             <CardIcon>👨🏻‍🍳</CardIcon>
-            <Value value={getBalanceNumber(stakedBalance)} />
+            <Value value={getBalanceNumber(stakedBalance, decimals)} />
             <Label text={`${tokenName} Tokens Staked`} />
           </StyledCardHeader>
           <StyledCardActions>

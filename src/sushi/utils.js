@@ -93,7 +93,11 @@ export const getTotalLPWethValue = async (
   pools,
 ) => {
 
-  if (pools.length === 0 || !pools[pid] || !pools[pid].tokenContract.methods.balanceOf || !pools[pid].lpContract.methods.balanceOf) {
+  if (pools.length === 0 || !pools.find(pool => pid === pool.pid) || !pools.find(pool => pid === pool.pid).tokenContract.methods.balanceOf || !pools.find(pool => pid === pool.pid).lpContract.methods.balanceOf) {
+      if (pid === 11) {
+          console.log("toaster")
+          console.log(pools.find(pool => pid === pool.pid))
+      }
       return {
           tokenAmount: new BigNumber(0),
           wethAmount : new BigNumber(0),
@@ -104,28 +108,28 @@ export const getTotalLPWethValue = async (
   }
 
   // Get balance of the token address
-  const tokenAmountWholeLP = await pools[pid].tokenContract.methods
-    .balanceOf(pools[pid].lpAddress)
+  const tokenAmountWholeLP = await pools.find(pool => pid === pool.pid).tokenContract.methods
+    .balanceOf(pools.find(pool => pid === pool.pid).lpAddress)
     .call()
-  const tokenDecimals = await pools[pid].tokenContract.methods.decimals().call()
+  const tokenDecimals = await pools.find(pool => pid === pool.pid).tokenContract.methods.decimals().call()
   // Get the share of lpContract that masterChefContract owns
-  const balance = await pools[pid].lpContract.methods
+  const balance = await pools.find(pool => pid === pool.pid).lpContract.methods
     .balanceOf(masterChefContract.options.address)
     .call()
   // Convert that into the portion of total lpContract = p1
-  const totalSupply = await pools[pid].lpContract.methods.totalSupply().call()
+  const totalSupply = await pools.find(pool => pid === pool.pid).lpContract.methods.totalSupply().call()
   // Get total weth value for the lpContract = w1
   let lpContractWeth = await wethContract.methods
-    .balanceOf(pools[pid].lpAddress)
+    .balanceOf(pools.find(pool => pid === pool.pid).lpAddress)
     .call()
 
   if (lpContractWeth == 0) {
-    const tokenBalance = await pools[pid].tokenContract.methods
-        .balanceOf(pools[pid].lpAddress)
+    const tokenBalance = await pools.find(pool => pid === pool.pid).tokenContract.methods
+        .balanceOf(pools.find(pool => pid === pool.pid).lpAddress)
         .call()
-    const balance2index = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[1].toLowerCase() == pools[pid].tokenAddresses[1].toString().toLowerCase());
+    const balance2index = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[1].toLowerCase() == pools.find(pool => pid === pool.pid).tokenAddresses[1].toString().toLowerCase());
     if (balance2index >= 0) {
-        let lpContractOtherToken = await pools[pid].tokenContract.methods
+        let lpContractOtherToken = await pools.find(pool => pid === pool.pid).tokenContract.methods
             .balanceOf(pools[balance2index].lpAddress)
             .call()
         lpContractWeth = await wethContract.methods
@@ -134,12 +138,12 @@ export const getTotalLPWethValue = async (
     }
 
       if (lpContractWeth == 0) {
-          const tokenBalance = await pools[pid].tokenContract2.methods
-              .balanceOf(pools[pid].lpAddress)
+          const tokenBalance = await pools.find(pool => pid === pool.pid).tokenContract2.methods
+              .balanceOf(pools.find(pool => pid === pool.pid).lpAddress)
               .call()
-          const balance2index = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[1].toLowerCase() == pools[pid].tokenAddresses[2].toString().toLowerCase());
+          const balance2index = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[1].toLowerCase() == pools.find(pool => pid === pool.pid).tokenAddresses[2].toString().toLowerCase());
           if (balance2index >= 0) {
-          let lpContractOtherToken = await pools[pid].tokenContract2.methods
+          let lpContractOtherToken = await pools.find(pool => pid === pool.pid).tokenContract2.methods
               .balanceOf(pools[balance2index].lpAddress)
               .call()
           lpContractWeth = await wethContract.methods
@@ -149,9 +153,9 @@ export const getTotalLPWethValue = async (
       }
 
     if (lpContractWeth == 0) {
-      const firstStepIndex = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[2] && pool.tokenAddresses[2].toLowerCase() == pools[pid].tokenAddress.toString().toLowerCase());
+      const firstStepIndex = pools.findIndex(pool => pool.pid !== pid && pool.tokenAddresses[2] && pool.tokenAddresses[2].toLowerCase() == pools.find(pool => pid === pool.pid).tokenAddress.toString().toLowerCase());
       if (firstStepIndex >= 0) {
-          let firstStepTokenBalance = await pools[pid].tokenContract.methods
+          let firstStepTokenBalance = await pools.find(pool => pid === pool.pid).tokenContract.methods
               .balanceOf(pools[firstStepIndex].lpAddress)
               .call()
 
@@ -170,13 +174,8 @@ export const getTotalLPWethValue = async (
 
   }
 
-  if (pools[pid].tokenSymbol === "BPT") {
-    lpContractWeth *= 50/45 // Our balancer pool has 45% WETH
-  }
-
-  if (pid === 13) {
-    lpContractWeth *= 50/30 // Phoenix BPT balancer pool has 30% WETH
-  }
+  console.log("pid " + pid + " " + pools.find(pool => pid === pool.pid).wethWeight)
+  lpContractWeth *= (500000000000000000 / pools.find(pool => pid === pool.pid).wethWeight)
 
   // Return p1 * w1 * 2
   const portionLp = new BigNumber(balance).div(new BigNumber(totalSupply))

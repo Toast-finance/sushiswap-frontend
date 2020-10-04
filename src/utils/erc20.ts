@@ -59,6 +59,22 @@ export const getSymbol = async (
   }
 }
 
+export const getNormalizedWeight = async (
+    provider: provider,
+    tokenAddress: string,
+): Promise<Number> => {
+  const lpContract = getContract(provider, tokenAddress)
+  try {
+    const balance: Number = await lpContract.methods
+        .getNormalizedWeight("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
+        .call()
+    return balance
+  } catch (e) {
+    console.log(e.toString())
+    return 500000000000000000
+  }
+}
+
 export const getToken0 = async (
     provider: provider,
     tokenAddress: string,

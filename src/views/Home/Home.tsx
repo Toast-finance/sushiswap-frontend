@@ -16,7 +16,7 @@ const Home: React.FC = () => {
     <Page>
         <img src={chef} height={120} />
 
-        <StyledInfo>🔥 You can now <strong>BURN TOAST</strong>! In exchange, you can add & boost reward pools for your favorite token! 🔥</StyledInfo>
+        {/*<StyledInfo>🔥 You can now add & boost reward pools for your favorite token by <strong>BURNING TOAST</strong>! 🔥<br />(look for the "add" and "boost" buttons)</StyledInfo>*/}
         <br /><br />
 
         <StyledInfo>

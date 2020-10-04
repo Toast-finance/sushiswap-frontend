@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js/bignumber'
 import UNIV2PairAbi from "./abi/uni_v2_lp.json";
 import ERC20Abi from "./abi/erc20.json";
-import {getContract, getSymbol, getToken0, getToken1} from "../../utils/erc20";
+import {getContract, getNormalizedWeight, getSymbol, getToken0, getToken1} from "../../utils/erc20";
 import {getMasterChefContract, getTotalLPWethValue, getWethContract} from "../utils";
 
 export const SUBTRACT_GAS_LIMIT = 100000
@@ -139,7 +139,7 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
                     icon = "🍅";
                     break;
                 case "U":
-                    icon = "🍣";
+                    icon = "🦄";
                     break;
                 case "V":
                     icon = "🥗";
@@ -173,18 +173,17 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
                 icon = "🍞"
             }
             if (token0 !== "0") {
-                icon = "";
                 if (token0.toLowerCase() === "0x19810559df63f19cfe88923313250550edadb743") {
-                    icon += "🏠"
+                    icon = "🏠"
                 }
                 if (token0.toLowerCase() === "0x774adc647a8d27947c8d7c098cdb4cdf30b126de") {
-                    icon += "🥑"
+                    icon = "🥑"
                 }
                 if (token0.toLowerCase() === "0x98be5a6b401b911151853d94a6052526dcb46fe3") {
-                    icon += "🥚"
+                    icon = "🥚"
                 }
                 if (token0.toLowerCase() === "0x774fb37e50db4bf53b7c08e6b71007bf1f1d9a47") {
-                    icon += "🍞"
+                    icon = "🍞"
                 }
                 if (token1.toLowerCase() === "0x19810559df63f19cfe88923313250550edadb743") {
                     icon += "🏠"
@@ -217,18 +216,15 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
                     symbol: symbol,
                     tokenSymbol: '',
                     icon: icon,
+
+                    lpAddress: pool.lpToken,
+                    tokenAddress: token0 !== "0" ? token0 : pool.lpToken,
+                    lpContract: getContract(ethereum, pool.lpToken),
+                    tokenContract: getContract(ethereum, token0 !== "0" ? token0 : pool.lpToken),
+                    tokenContract2: getContract(ethereum, token1 !== "0" ? token1 : pool.lpToken),
                 }
             )
         }
-        pools.map((pool) =>
-            Object.assign(pool, {
-                lpAddress: pool.lpAddresses[networkId],
-                tokenAddress: pool.tokenAddresses[networkId],
-                lpContract: getContract(ethereum, pool.lpAddresses[networkId]),
-                tokenContract: getContract(ethereum, pool.tokenAddresses[networkId]),
-                tokenContract2: getContract(ethereum, pool.tokenAddresses[2]),
-            }),
-        )
 
         const setProvider = (contract, address) => {
             contract.setProvider(ethereum)
@@ -241,6 +237,10 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
                 setProvider(tokenContract, tokenAddress)
             },
         )
+
+        for (let i = 0; i < poolLength; i++) {
+            pools[i].wethWeight = await getNormalizedWeight(pools[i].lpContract, pools[i].lpAddress)
+        }
     }
 
     pools = await Promise.all(pools.map(
@@ -254,6 +254,7 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
              tokenContract,
              lpAddress,
              lpContract,
+            wethWeight,
          }) => ({
             pid,
             id: symbol,
@@ -267,7 +268,8 @@ export const supportedPools = async (sushi, masterChefContract, networkId, web3,
             earnToken: 'toast',
             earnTokenAddress: contractAddresses.sushi,
             icon,
-            value: await getTotalLPWethValue(getMasterChefContract(sushi), getWethContract(sushi), pid, pools)
+            value: await getTotalLPWethValue(getMasterChefContract(sushi), getWethContract(sushi), pid, pools),
+            wethWeight
         }),
     ))
 
@@ -295,6 +297,7 @@ export const supportedPools2 = async (sushi, masterChefContract, networkId, web3
                 symbol: 'HOUSE-WETH UNI-V2 LP',
                 tokenSymbol: 'HOUSE',
                 icon: '🏠🦄',
+                wethWeight: 500000000000000000,
             },
             {
                 pid: 1,
@@ -308,6 +311,21 @@ export const supportedPools2 = async (sushi, masterChefContract, networkId, web3
                 symbol: 'TOAST-WETH UNI-V2 LP',
                 tokenSymbol: 'TOAST',
                 icon: '🍞🦄',
+                wethWeight: 500000000000000000,
+            },
+            {
+                pid: 14,
+                lpAddresses: {
+                    1: '0x19810559dF63f19cfE88923313250550eDADB743',
+                },
+                tokenAddresses: {
+                    1: '0x19810559dF63f19cfE88923313250550eDADB743',
+                },
+                name: '',
+                symbol: 'HOUSE',
+                tokenSymbol: 'HOUSE',
+                icon: '🏠',
+                wethWeight: 450000000000000000,
             },
             {
                 pid: 11,
@@ -321,6 +339,7 @@ export const supportedPools2 = async (sushi, masterChefContract, networkId, web3
                 symbol: 'TOASTER BPT',
                 tokenSymbol: 'BPT',
                 icon: '🏠🥑🥚🍞',
+                wethWeight: 450000000000000000,
             },
             {
                 pid: 2,
@@ -335,6 +354,7 @@ export const supportedPools2 = async (sushi, masterChefContract, networkId, web3
                 symbol: 'HOUSE-AVO UNI-V2 LP',
                 tokenSymbol: '',
                 icon: '🏠🥑🦄',
+                wethWeight: 500000000000000000,
             },
             {
                 pid: 3,
@@ -349,6 +369,7 @@ export const supportedPools2 = async (sushi, masterChefContract, networkId, web3
                 symbol: 'HOUSE-EGGS UNI-V2 LP',
                 tokenSymbol: '',
                 icon: '🏠🥚🦄',
+                wethWeight: 500000000000000000,
             },
             {
                 pid: 4,
@@ -363,6 +384,7 @@ export const supportedPools2 = async (sushi, masterChefContract, networkId, web3
                 symbol: 'HOUSE-TOAST UNI-V2 LP',
                 tokenSymbol: '',
                 icon: '🏠🍞🦄',
+                wethWeight: 500000000000000000,
             },
             {
                 pid: 5,
@@ -377,6 +399,7 @@ export const supportedPools2 = async (sushi, masterChefContract, networkId, web3
                 symbol: 'AVO-EGGS UNI-V2 LP',
                 tokenSymbol: '',
                 icon: '🥑🥚🦄',
+                wethWeight: 500000000000000000,
             },
             {
                 pid: 6,
@@ -391,6 +414,7 @@ export const supportedPools2 = async (sushi, masterChefContract, networkId, web3
                 symbol: 'AVO-TOAST UNI-V2 LP',
                 tokenSymbol: '',
                 icon: '🥑🍞🦄',
+                wethWeight: 500000000000000000,
             },
             {
                 pid: 7,
@@ -405,6 +429,7 @@ export const supportedPools2 = async (sushi, masterChefContract, networkId, web3
                 symbol: 'TOAST-EGGS UNI-V2 LP',
                 tokenSymbol: '',
                 icon: '🍞🥚🦄',
+                wethWeight: 500000000000000000,
             },
         ]
 

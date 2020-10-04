@@ -72,7 +72,7 @@ const FarmCards: React.FC = () => {
               : null,
         }
         const newFarmRows = [...farmRows]
-        if (newFarmRows[newFarmRows.length - 1].length === 3) {
+        if (newFarmRows[newFarmRows.length - 1].length === 4) {
           newFarmRows.push([farmWithStakedValue])
         } else {
           newFarmRows[newFarmRows.length - 1].push(farmWithStakedValue)
@@ -90,7 +90,7 @@ const FarmCards: React.FC = () => {
                   {farmRow.map((farm : any, j : any) => (
                       <React.Fragment key={j}>
                         <FarmCard farm={farm} />
-                        {(j === 0 || j === 1) && <StyledSpacer />}
+                        {(j === 0 || j === 1 || j === 2) && <StyledSpacer />}
                       </React.Fragment>
                   ))}
                 </StyledRow>
@@ -155,7 +155,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
               <CardIcon>{farm.icon}</CardIcon>
               <StyledTitle>{farm.name}</StyledTitle>
               <StyledDetails>
-                <StyledDetail>Add <a href={farm.lpToken.endsWith(" BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : "https://uniswap.info/pair/" + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
+                <StyledDetail>Add <a href={farm.lpToken.endsWith("BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : (farm.lpTokenAddress !== farm.tokenAddress ? "https://uniswap.info/pair/" : "https://etherscan.io/token/") + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
                 <StyledDetail style={{fontSize: 10, marginTop: 5, marginBottom: 5}}>({farm.lpTokenAddress})</StyledDetail>
                 <StyledDetail>Make {farm.earnToken.toUpperCase()} {poolWeight > 1 ? <span>(<strong>{poolWeight}x</strong> Rewards)</span> : ""}</StyledDetail>
               </StyledDetails>
@@ -189,7 +189,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
               }
 
               <StyledInsight>
-                    <span>APY</span>
+                    <span>Estimated APY</span>
                     <span>
                 {farm.apy
                     ? `${farm.apy
@@ -260,8 +260,8 @@ const StyledCardAccent = styled.div`
 `
 
 const StyledCards = styled.div`
-  width: 900px;
-  @media (max-width: 768px) {
+  width: 1200px;
+  @media (max-width: 1200px) {
     width: 100%;
   }
 `
@@ -286,7 +286,7 @@ const StyledRow = styled.div`
 
 const StyledCardWrapper = styled.div`
   display: flex;
-  width: calc((900px - ${(props) => props.theme.spacing[4]}px * 2) / 3);
+  width: calc((1200px - ${(props) => props.theme.spacing[4]}px * 3) / 4);
   position: relative;
 `
 

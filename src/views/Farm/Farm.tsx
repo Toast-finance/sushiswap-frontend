@@ -62,7 +62,7 @@ const Farm: React.FC = () => {
         title={name}
       />
       <StyledInfo>
-        🏆<b>Pro Tip</b>: To get ${lpTokenName}, {lpTokenName.endsWith(" BPT") ? <a href={"https://pools.balancer.exchange/#/pool/" + lpTokenAddress + "/"} target={"_blank"}>add liquidity to the Balancer pool</a> : <a href={"https://uniswap.info/pair/" + lpTokenAddress} target={"_blank"}>add liquidity to the Uniswap pair</a>}.<br />Please do your own research about how liquidity pools operate before you do this.<br />If the liquidity pool contains HOUSE, please be aware that HOUSE has no decimals and that your balance may be rounded when you withdraw.
+        🏆<b>Pro Tip</b>: To get ${lpTokenName}, {lpTokenName.endsWith("BPT") ? <a href={"https://pools.balancer.exchange/#/pool/" + lpTokenAddress + "/"} target={"_blank"}>add liquidity to the Balancer pool</a> : (lpTokenAddress !== tokenAddress ? <a href={"https://uniswap.info/pair/" + lpTokenAddress} target={"_blank"}>add liquidity to the Uniswap pair</a> : <a href={"https://etherscan.io/token/" + lpTokenAddress} target={"_blank"}>find the token through Etherscan</a>)}.<br />Please do your own research about how liquidity pools operate before you do this.<br />If the liquidity pool contains HOUSE, please be aware that HOUSE has no decimals and that your balance may be rounded when you withdraw.
       </StyledInfo>
       <br />
       <StyledFarm>

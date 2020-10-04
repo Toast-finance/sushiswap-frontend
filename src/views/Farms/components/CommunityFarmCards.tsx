@@ -72,7 +72,7 @@ const FarmCards: React.FC = () => {
               : null,
         }
         const newFarmRows = [...farmRows]
-          if (![0,1,11,2,3,4,5,6,7].includes(farm.pid)) {
+          if (![0,1,14,11,2,3,4,5,6,7].includes(farm.pid)) {
               if (newFarmRows[newFarmRows.length - 1].length === 3) {
                   newFarmRows.push([farmWithStakedValue])
               } else {
@@ -157,7 +157,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
               <CardIcon>{farm.icon}</CardIcon>
               <StyledTitle>{farm.name}</StyledTitle>
               <StyledDetails>
-                <StyledDetail>Add <a href={farm.lpToken.endsWith(" BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : "https://uniswap.info/pair/" + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
+                <StyledDetail>Add <a href={farm.lpToken.endsWith("BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : (farm.lpTokenAddress !== farm.tokenAddress ? "https://uniswap.info/pair/" : "https://etherscan.io/token/") + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
                 <StyledDetail style={{fontSize: 10, marginTop: 5, marginBottom: 5}}>({farm.lpTokenAddress})</StyledDetail>
                 <StyledDetail>Make {farm.earnToken.toUpperCase()} {poolWeight > 1 ? <span>(<strong>{poolWeight}x</strong> Rewards)</span> : ""}</StyledDetail>
               </StyledDetails>
@@ -191,7 +191,7 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
               }
 
               <StyledInsight>
-                    <span>APY</span>
+                    <span>Estimated APY</span>
                     <span>
                 {farm.apy
                     ? `${farm.apy

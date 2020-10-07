@@ -27,6 +27,9 @@ export const getWethContract = (sushi) => {
   return sushi && sushi.contracts && sushi.contracts.weth
 }
 
+export const getHeadChefContract = (sushi) => {
+    return sushi && sushi.contracts && sushi.contracts.headChef
+}
 export const getMasterChefContract = (sushi) => {
   return sushi && sushi.contracts && sushi.contracts.masterChef
 }
@@ -222,6 +225,18 @@ export const approve = async (lpContract, masterChefContract, account) => {
   return lpContract.methods
     .approve(masterChefContract.options.address, ethers.constants.MaxUint256)
     .send({ from: account })
+}
+
+export const boost = async (pid, headChefContract, account) => {
+    return headChefContract.methods
+        .increaseWeight(pid, true)
+        .send({ from: account })
+}
+
+export const add = async (token, headChefContract, account) => {
+    return headChefContract.methods
+        .addPool(token, true)
+        .send({ from: account })
 }
 
 export const getSushiSupply = async (sushi) => {

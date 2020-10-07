@@ -7,13 +7,16 @@ import { provider } from 'web3-core'
 import { Contract } from 'web3-eth-contract'
 
 import { getAllowance } from '../utils/erc20'
-import { getMasterChefContract } from '../sushi/utils'
+import {getHeadChefContract, getMasterChefContract} from '../sushi/utils'
 
-const useAllowance = (lpContract: Contract) => {
+const useAllowance = (lpContract: Contract, headChef = false) => {
   const [allowance, setAllowance] = useState(new BigNumber(0))
   const { account }: { account: string; ethereum: provider } = useWallet()
   const sushi = useSushi()
-  const masterChefContract = getMasterChefContract(sushi)
+  let masterChefContract = getMasterChefContract(sushi)
+  if (headChef) {
+    masterChefContract = getHeadChefContract(sushi)
+  }
 
   const fetchAllowance = useCallback(async () => {
     const allowance = await getAllowance(

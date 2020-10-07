@@ -52,10 +52,10 @@ const Nav: React.FC = () => {
                             href="https://etherscan.io/address/0xd725621e3b031d74e62c280dc0f5be0b50dfa050">
                     MasterChef
                 </StyledLink>
-                {/*<StyledLink target="_blank"
-                            href="https://etherscan.io/token/0xd725621e3b031d74e62c280dc0f5be0b50dfa050">
+                <StyledLink target="_blank"
+                            href="https://etherscan.io/address/0xf9ada18d40c104348620ab946954a8434ec95edc">
                     HeadChef
-                </StyledLink>*/}
+                </StyledLink>
                 <StyledLink target="_blank" href="https://gov.toast.finance/#/toast">
                     Proposals
                 </StyledLink>

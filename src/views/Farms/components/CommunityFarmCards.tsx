@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js'
-import React, { useEffect, useState } from 'react'
+import React, {useCallback, useEffect, useMemo, useState} from 'react'
 import Countdown, { CountdownRenderProps } from 'react-countdown'
 import styled, { keyframes } from 'styled-components'
 import { useWallet } from 'use-wallet'
@@ -15,13 +15,29 @@ import useAllStakedValue, {
 } from '../../../hooks/useAllStakedValue'
 import useFarms from '../../../hooks/useFarms'
 import useSushi from '../../../hooks/useSushi'
-import {getEarned, getMasterChefContract, getPoolSingleWeight, getPoolWeight} from '../../../sushi/utils'
+import {
+    getEarned,
+    getMasterChefContract,
+    getPoolSingleWeight,
+    getPoolWeight,
+    getSushiAddress
+} from '../../../sushi/utils'
 import { bnToDec } from '../../../utils'
 import {getBalanceNumber} from "../../../utils/formatBalance";
 import useEarnings from "../../../hooks/useEarnings";
 import {supportedPools} from "../../../sushi/lib/constants";
 import UNIV2PairAbi from "../../../sushi/lib/abi/uni_v2_lp.json";
 import ERC20Abi from "../../../sushi/lib/abi/erc20.json";
+import {getContract} from "../../../utils/erc20";
+import {provider} from "web3-core";
+import {sushiAddress} from "../../../constants/tokenAddresses";
+import useAllowance from "../../../hooks/useAllowance";
+import useApprove from "../../../hooks/useApprove";
+import useBoost from "../../../hooks/useBoost";
+import useAdd from "../../../hooks/useAdd";
+import TokenInput from "../../../components/TokenInput";
+import Input from "../../../components/Input";
+import useTokenBalance from "../../../hooks/useTokenBalance";
 
 interface FarmWithStakedValue extends Farm, StakedValue {
   apy: BigNumber
@@ -33,6 +49,8 @@ const FarmCards: React.FC = () => {
 
   const { account } = useWallet()
   const sushi = useSushi()
+    const sushiBalance = useTokenBalance(getSushiAddress(sushi))
+    const houseBalance = useTokenBalance("0x19810559df63f19cfe88923313250550edadb743")
 
     const { ethereum }: { ethereum: any } = useWallet()
     // @ts-ignore
@@ -44,13 +62,55 @@ const FarmCards: React.FC = () => {
       //const [farms] = useFarms()
       let pools = await supportedPools(sushi, getMasterChefContract(sushi), chainId, false, ethereum);
       setFarms(pools)
-
     }
     fetchFarms()
   }, [sushi, setFarms])
 
   //const stakedValue = useAllStakedValue(farms)
 
+    const lpContract = useMemo(() => {
+        return getContract(ethereum as provider, sushiAddress)
+    }, [ethereum, sushiAddress])
+    const allowance = useAllowance(lpContract, true)
+    const { onApprove } = useApprove(lpContract, true)
+    const [requestedApproval, setRequestedApproval] = useState(false)
+    const handleApprove = useCallback(async () => {
+        try {
+            setRequestedApproval(true)
+            const txHash = await onApprove()
+            // user rejected tx or didn't go thru
+            if (!txHash) {
+                setRequestedApproval(false)
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }, [onApprove, setRequestedApproval])
+
+    const [val, setVal] = useState('')
+    const handleChange = useCallback(
+        (e: React.FormEvent<HTMLInputElement>) => {
+            setVal(e.currentTarget.value.trim())
+        },
+        [setVal],
+    )
+
+    const { onAdd } = useAdd(val)
+    const [requestedAdd, setRequestedAdd] = useState(false)
+    const handleAdd = useCallback(async () => {
+        try {
+            setRequestedAdd(true)
+            const txHash = await onAdd()
+            // user rejected tx or didn't go thru
+            if (!txHash) {
+                setRequestedAdd(false)
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }, [onAdd, setRequestedAdd])
+
+    let rowAmount = 3
   let rows = farms.reduce(
       (farmRows : any, farm : any, i : any) => {
         const sushiIndex = 1
@@ -73,8 +133,9 @@ const FarmCards: React.FC = () => {
         }
         const newFarmRows = [...farmRows]
           if (![0,1,14,11,2,3,4,5,6,7].includes(farm.pid)) {
-              if (newFarmRows[newFarmRows.length - 1].length === 4) {
+              if (newFarmRows[newFarmRows.length - 1].length === rowAmount) {
                   newFarmRows.push([farmWithStakedValue])
+                  rowAmount = 4
               } else {
                   newFarmRows[newFarmRows.length - 1].push(farmWithStakedValue)
               }
@@ -89,10 +150,66 @@ const FarmCards: React.FC = () => {
         {!!rows[0].length ? (
             rows.map((farmRow : any, i : any) => (
                 <StyledRow key={i}>
+                    {i == 0 &&
+                        <>
+                    <StyledCardWrapper>
+                        <Card>
+                            <CardContent>
+                                <StyledContent>
+                                    <CardIcon>?</CardIcon>
+                                    <StyledTitle></StyledTitle>
+                                    <StyledDetails>
+                                        <StyledDetail><strong>Create your own reward pool!</strong></StyledDetail>
+                                    </StyledDetails>
+
+                                    <StyledDetails>
+                                        <StyledDetail style={{margin: '5px 0', fontSize: '14px'}}>BURN 1,000,000 TOAST 🔥 to create a reward pool for an ERC20 token of your choice!</StyledDetail>
+                                        <StyledDetail style={{margin: '5px 0', fontSize: '14px'}}>💡 You must hold 50 or more HOUSE in your wallet in order to use this feature.</StyledDetail>
+                                    </StyledDetails>
+
+                                    <Spacer />
+
+                                    <StyledDetail><strong>Enter the ERC20 address</strong></StyledDetail>
+                                    <Input
+                                        onChange={handleChange}
+                                        placeholder="0x0000000000000000000000000000000000000000"
+                                        value={val}
+                                    />
+
+                                    <Spacer />
+
+                                    {!allowance.toNumber() ? (
+                                        <Button
+                                            disabled={requestedApproval}
+                                            onClick={handleApprove}
+                                            text={`Approve TOAST`}
+                                        />
+                                    ) : (getBalanceNumber(houseBalance, 0) >= 50 ? (getBalanceNumber(sushiBalance) >= 500000 ?
+                                            <Button
+                                                disabled={requestedAdd}
+                                                text="Burn TOAST & Add Pool"
+                                                onClick={handleAdd}
+                                            /> : <Button
+                                                disabled={true}
+                                                text="Not enough TOAST in wallet"
+                                                onClick={handleAdd}
+                                            />
+                                    ) : <Button
+                                        disabled={true}
+                                        text="Not enough HOUSE in wallet"
+                                        onClick={handleAdd}
+                                    />)}
+                                </StyledContent>
+                            </CardContent>
+                        </Card>
+                    </StyledCardWrapper>
+                    <StyledSpacer />
+                    </>
+                    }
                   {farmRow.map((farm : any, j : any) => (
                       <React.Fragment key={j}>
                         <FarmCard farm={farm} />
-                        {(j === 0 || j === 1 || j === 2) && <StyledSpacer />}
+                        <StyledSpacer />
                       </React.Fragment>
                   ))}
                 </StyledRow>
@@ -114,13 +231,50 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
   const [startTime, setStartTime] = useState(0)
   const [harvestable, setHarvestable] = useState(0)
   const [poolWeight, setPoolWeight] = useState(0)
+    const [poolWeightPercent, setPoolWeightPercent] = useState(0)
 
   const { account } = useWallet()
   const { lpTokenAddress } = farm
   const sushi = useSushi()
-  const earned = useEarnings(farm.pid)
+    const sushiBalance = useTokenBalance(getSushiAddress(sushi))
+    const earned = useEarnings(farm.pid)
 
-  const renderer = (countdownProps: CountdownRenderProps) => {
+    const { ethereum } = useWallet()
+    const lpContract = useMemo(() => {
+        return getContract(ethereum as provider, sushiAddress)
+    }, [ethereum, sushiAddress])
+    const allowance = useAllowance(lpContract, true)
+    const { onApprove } = useApprove(lpContract, true)
+    const [requestedApproval, setRequestedApproval] = useState(false)
+    const handleApprove = useCallback(async () => {
+        try {
+            setRequestedApproval(true)
+            const txHash = await onApprove()
+            // user rejected tx or didn't go thru
+            if (!txHash) {
+                setRequestedApproval(false)
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }, [onApprove, setRequestedApproval])
+
+    const { onBoost } = useBoost(farm.pid)
+    const [requestedBoost, setRequestedBoost] = useState(false)
+    const handleBoost = useCallback(async () => {
+        try {
+            setRequestedBoost(true)
+            const txHash = await onBoost()
+            // user rejected tx or didn't go thru
+            if (!txHash) {
+                setRequestedBoost(false)
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }, [onBoost, setRequestedBoost])
+
+    const renderer = (countdownProps: CountdownRenderProps) => {
     const { hours, minutes, seconds } = countdownProps
     const paddedSeconds = seconds < 10 ? `0${seconds}` : seconds
     const paddedMinutes = minutes < 10 ? `0${minutes}` : minutes
@@ -139,12 +293,15 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
     async function fetchWeight() {
       const weight = await getPoolSingleWeight(getMasterChefContract(sushi), farm.pid)
       setPoolWeight(weight.toNumber() / 1000)
+
+        const totalWeight = await getPoolWeight(getMasterChefContract(sushi), farm.pid)
+        setPoolWeightPercent(totalWeight.toNumber())
     }
     fetchEarned()
     if (sushi) {
       fetchWeight()
     }
-  }, [sushi, lpTokenAddress, earned, setHarvestable, setPoolWeight])
+  }, [sushi, lpTokenAddress, earned, setHarvestable, setPoolWeight, setPoolWeightPercent])
 
   const poolActive = true // startTime * 1000 - Date.now() <= 0
 
@@ -159,36 +316,10 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
               <StyledDetails>
                 <StyledDetail>Add <a href={farm.lpToken.endsWith("BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : (farm.lpTokenAddress !== farm.tokenAddress ? "https://uniswap.info/pair/" : "https://etherscan.io/token/") + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
                 <StyledDetail style={{fontSize: 10, marginTop: 5, marginBottom: 5}}>({farm.lpTokenAddress})</StyledDetail>
-                <StyledDetail>Make {farm.earnToken.toUpperCase()} {poolWeight > 1 ? <span>(<strong>{poolWeight}x</strong> Rewards)</span> : ""}</StyledDetail>
+                  <StyledDetail>Make {farm.earnToken.toUpperCase()} {poolWeight > 0 ? <ToolTip>({poolWeight > 1 ? <strong>{poolWeight}x</strong> : <span>{poolWeight}x</span>} Rewards)<ToolTipText className={"tooltiptext"}>{(poolWeightPercent*1000).toFixed(2) + " TOAST per block"}</ToolTipText></ToolTip> : ''}</StyledDetail>
               </StyledDetails>
 
               <Spacer />
-
-              <Button
-                  disabled={!poolActive}
-                  text={poolActive ? 'Select' : undefined}
-                  to={`/community/${farm.lpTokenAddress}`}
-              >
-                {!poolActive && (
-                    <Countdown
-                        date={new Date(startTime * 1000)}
-                        renderer={renderer}
-                    />
-                )}
-              </Button>
-              <Spacer />
-
-              {harvestable > 0 &&
-              <StyledDetailsHarvest>
-                {harvestable.toLocaleString('en-US',  { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TOAST ready
-              </StyledDetailsHarvest>
-              }
-
-              {harvestable <= 0 &&
-              <StyledDetailsHarvest>
-                &nbsp;
-              </StyledDetailsHarvest>
-              }
 
               <StyledInsight>
                     <span>Estimated APY</span>
@@ -197,8 +328,8 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
                     ? `${farm.apy
                         .times(new BigNumber(100))
                         .toNumber()
-                        .toLocaleString('en-US')
-                        .slice(0, -1) || "???"}%`
+                        .toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                         || "???"}%`
                     : 'Loading ...'}
               </span>
                     {/* <span>
@@ -214,6 +345,52 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
                 ETH
               </span> */}
                   </StyledInsight>
+
+                <StyledDetails><StyledDetail style={{margin: '5px 0', fontSize: '14px'}}>BURN 500,000 TOAST 🔥 to boost the reward weight multiplier by 1x!</StyledDetail></StyledDetails>
+                {!allowance.toNumber() ? (
+                    <Button
+                        disabled={requestedApproval}
+                        onClick={handleApprove}
+                        text={`Approve TOAST`}
+                    />
+                ) : (getBalanceNumber(sushiBalance) >= 500000 ?
+                        <Button
+                            disabled={requestedBoost}
+                            text="Burn TOAST & Boost"
+                            onClick={handleBoost}
+                        /> : <Button
+                            disabled={true}
+                            text="Not enough TOAST in wallet"
+                            onClick={handleBoost}
+                        />
+                )}
+
+                <Spacer />
+
+                {harvestable > 0 &&
+                <StyledDetailsHarvest>
+                    {harvestable.toLocaleString('en-US',  { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TOAST ready
+                </StyledDetailsHarvest>
+                }
+
+                {harvestable <= 0 &&
+                <StyledDetailsHarvest>
+                    &nbsp;
+                </StyledDetailsHarvest>
+                }
+
+                <Button
+                    disabled={!poolActive}
+                    text={poolActive ? 'Stake/Unstake/Harvest' : undefined}
+                    to={`/community/${farm.lpTokenAddress}`}
+                >
+                    {!poolActive && (
+                        <Countdown
+                            date={new Date(startTime * 1000)}
+                            renderer={renderer}
+                        />
+                    )}
+                </Button>
             </StyledContent>
           </CardContent>
         </Card>
@@ -277,7 +454,6 @@ const StyledLoadingWrapper = styled.div`
 
 const StyledRow = styled.div`
   display: flex;
-  margin-bottom: ${(props) => props.theme.spacing[4]}px;
   flex-flow: row wrap;
   @media (max-width: 768px) {
     width: 100%;
@@ -340,6 +516,34 @@ const StyledInsight = styled.div`
   border: 1px solid #e6dcd5;
   text-align: center;
   padding: 0 12px;
+`
+
+const ToolTip = styled.div`
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+  
+  &:hover .tooltiptext {
+    visibility: visible;
+  }
+`
+
+const ToolTipText = styled.span`
+  visibility: hidden;
+  background-color: #666;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+
+  width: 200px;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -100px; /* Use half of the width (120/2 = 60), to center the tooltip */
 `
 
 export default FarmCards

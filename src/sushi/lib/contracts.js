@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js/bignumber'
 import ERC20Abi from './abi/erc20.json'
 import MasterChefAbi from './abi/masterchef.json'
+import HeadChefAbi from './abi/headchef.json'
 import SushiAbi from './abi/sushi.json'
 import UNIV2PairAbi from './abi/uni_v2_lp.json'
 import WETHAbi from './abi/weth.json'
@@ -23,6 +24,7 @@ export class Contracts {
 
     this.sushi = new this.web3.eth.Contract(SushiAbi)
     this.masterChef = new this.web3.eth.Contract(MasterChefAbi)
+    this.headChef = new this.web3.eth.Contract(HeadChefAbi)
     this.weth = new this.web3.eth.Contract(WETHAbi)
 
     this.pools = localStorage.getItem("pools") ? JSON.parse(localStorage.getItem("pools")) : [];
@@ -42,6 +44,7 @@ export class Contracts {
 
     setProvider(this.sushi, contractAddresses.sushi[networkId])
     setProvider(this.masterChef, contractAddresses.masterChef[networkId])
+    setProvider(this.headChef, contractAddresses.headChef[networkId])
     setProvider(this.weth, contractAddresses.weth[networkId])
 
     /*this.pools.forEach(
@@ -55,6 +58,7 @@ export class Contracts {
   setDefaultAccount(account) {
     this.sushi.options.from = account
     this.masterChef.options.from = account
+    this.headChef.options.from = account
   }
 
   async callContractFunction(method, options) {

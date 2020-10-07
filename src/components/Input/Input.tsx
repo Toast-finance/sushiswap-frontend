@@ -32,7 +32,7 @@ const StyledInputWrapper = styled.div`
   box-shadow: inset 4px 4px 8px ${props => props.theme.color.grey[300]},
     inset -6px -6px 12px ${props => props.theme.color.grey[100]};
   display: flex;
-  height: 72px;
+  height: 54px;
   padding: 0 ${props => props.theme.spacing[3]}px;
 `
 
@@ -40,12 +40,13 @@ const StyledInput = styled.input`
   background: none;
   border: 0;
   color: ${props => props.theme.color.grey[600]};
-  font-size: 18px;
+  font-size: 14px;
   flex: 1;
   height: 56px;
   margin: 0;
   padding: 0;
   outline: none;
+  min-width: 216px;
 `
 
 export default Input

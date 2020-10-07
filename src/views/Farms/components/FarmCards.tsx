@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js'
-import React, { useEffect, useState } from 'react'
+import React, {useCallback, useEffect, useMemo, useState} from 'react'
 import Countdown, { CountdownRenderProps } from 'react-countdown'
 import styled, { keyframes } from 'styled-components'
 import { useWallet } from 'use-wallet'
@@ -15,13 +15,28 @@ import useAllStakedValue, {
 } from '../../../hooks/useAllStakedValue'
 import useFarms from '../../../hooks/useFarms'
 import useSushi from '../../../hooks/useSushi'
-import {getEarned, getMasterChefContract, getPoolSingleWeight, getPoolWeight} from '../../../sushi/utils'
+import {
+    getEarned,
+    getMasterChefContract,
+    getPoolSingleWeight,
+    getPoolWeight,
+    getSushiAddress
+} from '../../../sushi/utils'
 import { bnToDec } from '../../../utils'
 import {getBalanceNumber} from "../../../utils/formatBalance";
 import useEarnings from "../../../hooks/useEarnings";
 import {supportedPools, supportedPools2} from "../../../sushi/lib/constants";
 import UNIV2PairAbi from "../../../sushi/lib/abi/uni_v2_lp.json";
 import ERC20Abi from "../../../sushi/lib/abi/erc20.json";
+import IconButton from "../../../components/IconButton";
+import {AddIcon} from "../../../components/icons";
+import useAllowance from "../../../hooks/useAllowance";
+import useApprove from "../../../hooks/useApprove";
+import {getContract} from "../../../utils/erc20";
+import {provider} from "web3-core";
+import {sushiAddress} from "../../../constants/tokenAddresses";
+import useBoost from '../../../hooks/useBoost'
+import useTokenBalance from "../../../hooks/useTokenBalance";
 
 interface FarmWithStakedValue extends Farm, StakedValue {
   apy: BigNumber
@@ -112,13 +127,51 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
   const [startTime, setStartTime] = useState(0)
   const [harvestable, setHarvestable] = useState(0)
   const [poolWeight, setPoolWeight] = useState(0)
+    const [poolWeightPercent, setPoolWeightPercent] = useState(0)
 
-  const { account } = useWallet()
+    const { account } = useWallet()
   const { lpTokenAddress } = farm
   const sushi = useSushi()
+    const sushiBalance = useTokenBalance(getSushiAddress(sushi))
   const earned = useEarnings(farm.pid)
 
-  const renderer = (countdownProps: CountdownRenderProps) => {
+    const { ethereum } = useWallet()
+    const lpContract = useMemo(() => {
+        return getContract(ethereum as provider, sushiAddress)
+    }, [ethereum, sushiAddress])
+
+    const allowance = useAllowance(lpContract, true)
+    const { onApprove } = useApprove(lpContract, true)
+    const [requestedApproval, setRequestedApproval] = useState(false)
+    const handleApprove = useCallback(async () => {
+        try {
+            setRequestedApproval(true)
+            const txHash = await onApprove()
+            // user rejected tx or didn't go thru
+            if (!txHash) {
+                setRequestedApproval(false)
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }, [onApprove, setRequestedApproval])
+
+    const { onBoost } = useBoost(farm.pid)
+    const [requestedBoost, setRequestedBoost] = useState(false)
+    const handleBoost = useCallback(async () => {
+        try {
+            setRequestedBoost(true)
+            const txHash = await onBoost()
+            // user rejected tx or didn't go thru
+            if (!txHash) {
+                setRequestedBoost(false)
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }, [onBoost, setRequestedBoost])
+
+    const renderer = (countdownProps: CountdownRenderProps) => {
     const { hours, minutes, seconds } = countdownProps
     const paddedSeconds = seconds < 10 ? `0${seconds}` : seconds
     const paddedMinutes = minutes < 10 ? `0${minutes}` : minutes
@@ -137,12 +190,15 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
     async function fetchWeight() {
       const weight = await getPoolSingleWeight(getMasterChefContract(sushi), farm.pid)
       setPoolWeight(weight.toNumber() / 1000)
+
+      const totalWeight = await getPoolWeight(getMasterChefContract(sushi), farm.pid)
+      setPoolWeightPercent(totalWeight.toNumber())
     }
     fetchEarned()
     if (sushi) {
       fetchWeight()
     }
-  }, [sushi, lpTokenAddress, earned, setHarvestable, setPoolWeight])
+  }, [sushi, lpTokenAddress, earned, setHarvestable, setPoolWeight, setPoolWeightPercent])
 
   const poolActive = true // startTime * 1000 - Date.now() <= 0
 
@@ -157,46 +213,20 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
               <StyledDetails>
                 <StyledDetail>Add <a href={farm.lpToken.endsWith("BPT") ? "https://pools.balancer.exchange/#/pool/" + farm.lpTokenAddress + "/" : (farm.lpTokenAddress !== farm.tokenAddress ? "https://uniswap.info/pair/" : "https://etherscan.io/token/") + farm.lpTokenAddress} target={"_blank"} style={{color: "#805e49"}}>{farm.lpToken.toUpperCase()}</a></StyledDetail>
                 <StyledDetail style={{fontSize: 10, marginTop: 5, marginBottom: 5}}>({farm.lpTokenAddress})</StyledDetail>
-                <StyledDetail>Make {farm.earnToken.toUpperCase()} {poolWeight > 1 ? <span>(<strong>{poolWeight}x</strong> Rewards)</span> : ""}</StyledDetail>
+                  <StyledDetail>Make {farm.earnToken.toUpperCase()} {poolWeight > 0 ? <ToolTip>({poolWeight > 1 ? <strong>{poolWeight}x</strong> : <span>{poolWeight}x</span>} Rewards)<ToolTipText className={"tooltiptext"}>{(poolWeightPercent*1000).toFixed(2) + " TOAST per block"}</ToolTipText></ToolTip> : ''}</StyledDetail>
               </StyledDetails>
 
-              <Spacer />
+                <Spacer />
 
-              <Button
-                  disabled={!poolActive}
-                  text={poolActive ? 'Select' : undefined}
-                  to={`/farms/${farm.lpTokenAddress}`}
-              >
-                {!poolActive && (
-                    <Countdown
-                        date={new Date(startTime * 1000)}
-                        renderer={renderer}
-                    />
-                )}
-              </Button>
-              <Spacer />
-
-              {harvestable > 0 &&
-              <StyledDetailsHarvest>
-                {harvestable.toLocaleString('en-US',  { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TOAST ready
-              </StyledDetailsHarvest>
-              }
-
-              {harvestable <= 0 &&
-              <StyledDetailsHarvest>
-                &nbsp;
-              </StyledDetailsHarvest>
-              }
-
-              <StyledInsight>
+                <StyledInsight>
                     <span>Estimated APY</span>
                     <span>
                 {farm.apy
                     ? `${farm.apy
                         .times(new BigNumber(100))
                         .toNumber()
-                        .toLocaleString('en-US')
-                        .slice(0, -1) || "???"}%`
+                        .toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) 
+                    || "???"}%`
                     : 'Loading ...'}
               </span>
                     {/* <span>
@@ -212,6 +242,52 @@ const FarmCard: React.FC<FarmCardProps> = ({ farm }) => {
                 ETH
               </span> */}
                   </StyledInsight>
+
+                <StyledDetails><StyledDetail style={{margin: '5px 0', fontSize: '14px'}}>BURN 500,000 TOAST 🔥 to boost the reward weight multiplier by 1x!</StyledDetail></StyledDetails>
+                {!allowance.toNumber() ? (
+                    <Button
+                        disabled={requestedApproval}
+                        onClick={handleApprove}
+                        text={`Approve TOAST`}
+                    />
+                ) : (getBalanceNumber(sushiBalance) >= 500000 ?
+                    <Button
+                        disabled={requestedBoost}
+                        text="Burn TOAST & Boost"
+                        onClick={handleBoost}
+                    /> : <Button
+                            disabled={true}
+                            text="Not enough TOAST in wallet"
+                            onClick={handleBoost}
+                        />
+                )}
+
+                <Spacer />
+
+                {harvestable > 0 &&
+                <StyledDetailsHarvest>
+                    {harvestable.toLocaleString('en-US',  { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TOAST ready
+                </StyledDetailsHarvest>
+                }
+
+                {harvestable <= 0 &&
+                <StyledDetailsHarvest>
+                    &nbsp;
+                </StyledDetailsHarvest>
+                }
+
+                <Button
+                    disabled={!poolActive}
+                    text={poolActive ? 'Stake/Unstake/Harvest' : undefined}
+                    to={`/farms/${farm.lpTokenAddress}`}
+                >
+                    {!poolActive && (
+                        <Countdown
+                            date={new Date(startTime * 1000)}
+                            renderer={renderer}
+                        />
+                    )}
+                </Button>
             </StyledContent>
           </CardContent>
         </Card>
@@ -338,6 +414,41 @@ const StyledInsight = styled.div`
   border: 1px solid #e6dcd5;
   text-align: center;
   padding: 0 12px;
+`
+
+const StyledCardActions = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: ${(props) => props.theme.spacing[6]}px;
+  width: 100%;
+`
+
+const ToolTip = styled.div`
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+  
+  &:hover .tooltiptext {
+    visibility: visible;
+  }
+`
+
+const ToolTipText = styled.span`
+  visibility: hidden;
+  background-color: #666;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+
+  width: 200px;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -100px; /* Use half of the width (120/2 = 60), to center the tooltip */
 `
 
 export default FarmCards
